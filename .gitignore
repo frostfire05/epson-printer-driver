@@ -1,0 +1,12 @@
+# Build output
+*.o
+epson_demo
+
+# Generated PDFs
+pdf_output/
+
+# Editor / OS clutter
+.vscode/
+.idea/
+*.swp
+.DS_Store
