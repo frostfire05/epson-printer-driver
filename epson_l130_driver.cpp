@@ -342,15 +342,7 @@ std::vector<uint8_t> EscP2Encoder::buildJobHeader() const {
     // 1. Initialise printer  — ESC @
     push(cmd, {ESC, '@'});
 
-    // 2. Remote Mode prologue (ESC ( R) — enter remote maintenance mode
-    //    Needed for ink-level query etc., but safe to send always.
-    push(cmd, {ESC, '(', 'R', 8, 0, 0,
-               'R', 'E', 'M', 'O', 'T', 'E', '1', 0x00});
-
-    // 3. Exit remote mode
-    push(cmd, {ESC, 0x00, 0x00, 0x00});
-
-    // 4. Set Units — ESC ( U  nn  mm  horizontal  vertical  column_type
+    // 2. Set Units — ESC ( U  nn  mm  horizontal  vertical  column_type
     //    We request 1/3600" base = code 0x0A for 360dpi variant
     push(cmd, {ESC, '(', 'U',
                0x05, 0x00,                        // data length = 5
@@ -359,7 +351,7 @@ std::vector<uint8_t> EscP2Encoder::buildJobHeader() const {
                dpiCode(settings_.dpiY),
                0x02, 0x00});
 
-    // 5. Set Page Format — ESC ( S  pagelen  pagewidth (in units)
+    // 3. Set Page Format — ESC ( S  pagelen  pagewidth (in units)
     uint32_t unitPer720 = 3600 / settings_.dpiX;
     uint32_t pageW = dotsPerLineX() * unitPer720;
     uint32_t pageH = dotsPerLineY() * (3600 / settings_.dpiY);
@@ -367,18 +359,15 @@ std::vector<uint8_t> EscP2Encoder::buildJobHeader() const {
     pushU32LE(cmd, pageH);
     pushU32LE(cmd, pageW);
 
-    // 6. Set Media Type — ESC ( m
+    // 4. Set Media Type — ESC ( m
     push(cmd, {ESC, '(', 'm', 0x02, 0x00,
                mediaCode(), qualityCode()});
 
-    // 7. Select Color Mode — ESC ( K
+    // 5. Select Color Mode — ESC ( K
     uint8_t colParam = (settings_.colorMode == ColorMode::Grayscale) ? 0x00 : 0x01;
     push(cmd, {ESC, '(', 'K', 0x02, 0x00, colParam, 0x00});
 
-    // 8. Set Colour / Ink  — ESC r  (select colour)
-    //    For raster printing the colour is set per scan-line command.
-
-    // 9. Enable raster graphics — ESC ( G
+    // 6. Enable raster graphics — ESC ( G
     push(cmd, {ESC, '(', 'G', 0x01, 0x00, 0x01});
 
     return cmd;
@@ -397,7 +386,9 @@ std::vector<uint8_t> EscP2Encoder::buildPageHeader(uint32_t /*pageIndex*/) const
 }
 
 std::vector<uint8_t> EscP2Encoder::buildPageFooter() const {
-    return buildFormFeed();
+    std::vector<uint8_t> cmd;
+    push(cmd, {0x0D, 0x0C}); // Carriage Return + Form Feed
+    return cmd;
 }
 
 std::vector<uint8_t> EscP2Encoder::buildJobFooter() const {
@@ -439,28 +430,17 @@ std::vector<uint8_t> EscP2Encoder::encodeRasterLine(
         compressionMode = 0;
     }
 
-    // Header: ESC ( i  dlen_lo dlen_hi  colour  comp  bitsPerDot
-    //              lineW_lo lineW_hi  lines_lo lines_hi
-    // data length = 8 bytes header + payload
-    uint16_t dataLen = 8;  // fixed header portion before data
-    uint16_t lineW   = static_cast<uint16_t>(pixelCount);
-    uint16_t numLine = 1;
+    uint16_t bytesPerLine = static_cast<uint16_t>(dots.size());
+    uint16_t numLines     = 1;
 
     std::vector<uint8_t> cmd;
-    push(cmd, {ESC, '(', 'i'});
-    pushU16LE(cmd, dataLen);         // length of the fixed header fields
-    push(cmd, {colorChannel,
+    // Standard ESC/P2 raster command: ESC i [color] [comp] [bpp] [bytes_lo bytes_hi] [lines_lo lines_hi] [data]
+    push(cmd, {ESC, 'i',
+               colorChannel,
                compressionMode,
-               0x01,                 // bits per dot
-               0x00});               // reserved
-    pushU16LE(cmd, lineW);
-    pushU16LE(cmd, numLine);
-
-    // Now the payload length and data
-    // (The ESC ( i spec bundles payload directly after header in some
-    //  firmware versions; others prepend a 2-byte payload length.
-    //  We prepend it for compatibility.)
-    pushU16LE(cmd, static_cast<uint16_t>(payload.size()));
+               0x01});               // 1 bit per dot
+    pushU16LE(cmd, bytesPerLine);
+    pushU16LE(cmd, numLines);
     cmd.insert(cmd.end(), payload.begin(), payload.end());
 
     return cmd;
@@ -647,19 +627,28 @@ void PrintJob::addPage(const uint8_t* pixels, uint32_t width, uint32_t height) {
             ColorProfile::separateLine(rowPixels, width,
                                        planeC.data(), planeM.data(),
                                        planeY.data(), planeK.data());
-            // Encode in CMYK order: 0=K 1=C 2=M 3=Y
-            auto lineK = encoder_.encodeRasterLine(planeK.data(), width, 0);
-            auto lineC = encoder_.encodeRasterLine(planeC.data(), width, 1);
-            auto lineM = encoder_.encodeRasterLine(planeM.data(), width, 2);
-            auto lineY = encoder_.encodeRasterLine(planeY.data(), width, 3);
+            // Epson ESC/P2 color channels:
+            // 0x00 = Black (K)
+            // 0x01 = Magenta (M)
+            // 0x02 = Cyan (C)
+            // 0x04 = Yellow (Y)
+            auto lineK = encoder_.encodeRasterLine(planeK.data(), width, 0x00);
+            auto lineC = encoder_.encodeRasterLine(planeC.data(), width, 0x02);
+            auto lineM = encoder_.encodeRasterLine(planeM.data(), width, 0x01);
+            auto lineY = encoder_.encodeRasterLine(planeY.data(), width, 0x04);
             append(lineK); append(lineC);
             append(lineM); append(lineY);
         } else {
-            // Greyscale: channel 0 (K)
+            // Greyscale: channel 0x00 (Black)
             std::copy(rowPixels, rowPixels + width, planeGrey.data());
-            auto lineK = encoder_.encodeRasterLine(planeGrey.data(), width, 0);
+            auto lineK = encoder_.encodeRasterLine(planeGrey.data(), width, 0x00);
             append(lineK);
         }
+
+        // Advance to next raster line: Carriage Return + 1-dot vertical feed
+        append({0x0D});
+        auto adv = encoder_.buildVerticalAdvance(1);
+        append(adv);
 
         (void)channels; // suppress unused warning
     }
