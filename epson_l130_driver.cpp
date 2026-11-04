@@ -86,9 +86,37 @@ void UsbTransport::open() {
     for (ssize_t i = 0; i < count; ++i) {
         libusb_device_descriptor desc{};
         if (libusb_get_device_descriptor(list[i], &desc) == 0 &&
-            desc.idVendor == USB_VENDOR_ID && desc.idProduct == USB_PRODUCT_ID) {
+            isSupportedUsbDevice(desc.idVendor, desc.idProduct)) {
             found = list[i];
+            productId_ = desc.idProduct;
             break;
+        }
+    }
+
+    if (found) {
+        libusb_config_descriptor* config = nullptr;
+        if (libusb_get_active_config_descriptor(found, &config) == 0 ||
+            libusb_get_config_descriptor(found, 0, &config) == 0) {
+            for (int i = 0; i < config->bNumInterfaces; ++i) {
+                const libusb_interface* iface = &config->interface[i];
+                for (int a = 0; a < iface->num_altsetting; ++a) {
+                    const libusb_interface_descriptor* alt = &iface->altsetting[a];
+                    if (alt->bInterfaceClass == LIBUSB_CLASS_PRINTER || config->bNumInterfaces == 1) {
+                        interface_ = alt->bInterfaceNumber;
+                    }
+                    for (int e = 0; e < alt->bNumEndpoints; ++e) {
+                        const libusb_endpoint_descriptor* ep = &alt->endpoint[e];
+                        if ((ep->bmAttributes & LIBUSB_TRANSFER_TYPE_MASK) == LIBUSB_TRANSFER_TYPE_BULK) {
+                            if ((ep->bEndpointAddress & LIBUSB_ENDPOINT_IN) != 0) {
+                                epIn_ = ep->bEndpointAddress;
+                            } else {
+                                epOut_ = ep->bEndpointAddress;
+                            }
+                        }
+                    }
+                }
+            }
+            libusb_free_config_descriptor(config);
         }
     }
 
@@ -150,7 +178,7 @@ void UsbTransport::write(const uint8_t* data, size_t length) {
     int transferred = 0;
     int r = libusb_bulk_transfer(
         handle_,
-        EP_OUT,
+        epOut_,
         const_cast<uint8_t*>(data),
         static_cast<int>(length),
         &transferred,
@@ -173,7 +201,7 @@ size_t UsbTransport::read(uint8_t* buf, size_t maxLength) {
     int transferred = 0;
     int r = libusb_bulk_transfer(
         handle_,
-        EP_IN,
+        epIn_,
         buf,
         static_cast<int>(maxLength),
         &transferred,
@@ -643,6 +671,10 @@ void EpsonL130Driver::disconnect() {
 
 bool EpsonL130Driver::isConnected() const {
     return transport_.isOpen();
+}
+
+uint16_t EpsonL130Driver::getProductId() const {
+    return transport_.getProductId();
 }
 
 std::string EpsonL130Driver::queryDeviceId() {

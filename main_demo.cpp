@@ -380,7 +380,7 @@ int main() {
         std::cout << "Connecting to EPSON L130 …\n";
         driver.connect();
         printerAvailable = true;
-        std::cout << "\033[32mConnected.\033[0m\n";
+        std::cout << "\033[32mConnected (USB PID: 0x" << std::hex << std::setw(4) << std::setfill('0') << driver.getProductId() << std::dec << ").\033[0m\n";
     }
     catch (const DeviceNotFound&) {
         std::cerr << "\033[33m[WARN] EPSON L130 not found on USB.\033[0m\n";

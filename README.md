@@ -104,7 +104,7 @@ Press **Ctrl+C** to stop after the current job.
 By default only root can access USB printers. Either run with `sudo`, or add a udev rule once:
 
 ```bash
-echo 'ATTRS{idVendor}=="04b8", ATTRS{idProduct}=="08a1", MODE="0666", GROUP="plugdev"' \
+echo 'ATTRS{idVendor}=="04b8", ATTRS{idProduct}=="007c", MODE="0666", GROUP="plugdev"' \
   | sudo tee /etc/udev/rules.d/99-epson-l130.rules
 sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
@@ -174,7 +174,7 @@ includes the exact udev rule to install.
 
 | | |
 |---|---|
-| USB vendor / product ID | `0x04B8` (Seiko Epson) / `0x08A1` |
+| USB vendor / product ID | `0x04B8` (Seiko Epson) / `0x007C` (L130 Series), `0x08A1` |
 | Endpoints | bulk OUT `0x01`, bulk IN `0x82` |
 | Resolutions | 180 (draft), 360 (normal), 720 (high) dpi |
 | Paper | A4 (Letter, Legal and B5 defined) |

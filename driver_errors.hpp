@@ -110,7 +110,7 @@ public:
         : ConnectionError(
             "Permission denied opening USB device. "
             "Either run with sudo, or add a udev rule:\n"
-            "  echo 'ATTRS{idVendor}==\"04b8\", ATTRS{idProduct}==\"08a1\", "
+            "  echo 'ATTRS{idVendor}==\"04b8\", "
             "MODE=\"0666\", GROUP=\"plugdev\"' "
             "| sudo tee /etc/udev/rules.d/99-epson-l130.rules\n"
             "  sudo udevadm control --reload-rules && sudo udevadm trigger\n"

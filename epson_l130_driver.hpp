@@ -35,7 +35,14 @@ namespace epson_l130 {
 // ═══════════════════════════════════════════════════════════════════════════
 
 constexpr uint16_t USB_VENDOR_ID   = 0x04B8;   // Seiko Epson Corp.
-constexpr uint16_t USB_PRODUCT_ID  = 0x08A1;   // L130
+constexpr uint16_t USB_PRODUCT_ID_L130  = 0x007C;   // EPSON L130 Series (standard hardware PID)
+constexpr uint16_t USB_PRODUCT_ID_ALT   = 0x08A1;   // L210 / L350 / L130 variants
+constexpr uint16_t USB_PRODUCT_ID       = USB_PRODUCT_ID_L130; // Default PID
+
+inline bool isSupportedUsbDevice(uint16_t vendorId, uint16_t productId) {
+    return vendorId == USB_VENDOR_ID &&
+           (productId == USB_PRODUCT_ID_L130 || productId == USB_PRODUCT_ID_ALT);
+}
 
 // USB endpoints (bulk)
 constexpr uint8_t EP_OUT = 0x01;   // host → printer
@@ -163,11 +170,17 @@ public:
     // Read ESC/P2 printer status packet (ST2 format)
     std::vector<uint8_t> readStatusPacket();
 
+    // Query detected product ID
+    uint16_t getProductId() const { return productId_; }
+
 private:
     libusb_context*       ctx_    = nullptr;
     libusb_device_handle* handle_ = nullptr;
     int                   interface_ = 0;
     bool                  kernelDetached_ = false;
+    uint8_t               epOut_          = EP_OUT;
+    uint8_t               epIn_           = EP_IN;
+    uint16_t              productId_      = 0;
 
     void claimInterface();
     void releaseInterface();
@@ -303,6 +316,7 @@ public:
     void disconnect();
 
     bool isConnected() const;
+    uint16_t getProductId() const;
 
     // Returns the printer's IEEE 1284 device ID string.
     std::string queryDeviceId();
