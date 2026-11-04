@@ -85,7 +85,7 @@ void pushU16LE(std::vector<uint8_t>& v, uint16_t val) {
     v.push_back((val >> 8) & 0xFF);
 }
 
-void pushU32LE(std::vector<uint8_t>& v, uint32_t val) {
+[[maybe_unused]] void pushU32LE(std::vector<uint8_t>& v, uint32_t val) {
     v.push_back(val & 0xFF);
     v.push_back((val >> 8) & 0xFF);
     v.push_back((val >> 16) & 0xFF);
@@ -417,42 +417,38 @@ std::vector<uint8_t> EscP2Encoder::buildJobHeader() const {
     // 1. Initialise printer — ESC @
     push(cmd, {ESC, '@'});
 
-    // 2. Select Graphics Mode — ESC ( G (1 byte length, mode 1)
-    push(cmd, {ESC, '(', 'G', 0x01, 0x00, 0x01});
+    // 2. Set Units — ESC ( U (length 1, base unit selector: 10 = 1/360", 5 = 1/720")
+    uint8_t baseUnitSelector = (settings_.dpiY == 720) ? 0x05 : 0x0A;
+    push(cmd, {ESC, '(', 'U', 0x01, 0x00, baseUnitSelector});
 
-    // 3. Set Units — ESC ( U (length 5, base unit 1/3600 inch)
-    push(cmd, {ESC, '(', 'U',
-               0x05, 0x00,
-               0x0A,                               // 1/3600 inch base
-               dpiCode(settings_.dpiX),
-               dpiCode(settings_.dpiY),
-               0x02, 0x00});
+    // 3. Set Page Length in basic units — ESC ( C (length 2, 16-bit page length)
+    uint16_t pageH_units = static_cast<uint16_t>((PAGE_HEIGHT_MM / 25.4f) * settings_.dpiY);
+    push(cmd, {ESC, '(', 'C', 0x02, 0x00});
+    pushU16LE(cmd, pageH_units);
 
-    // 4. Set Page Length — ESC ( C (length in 1/3600" units)
-    uint32_t pageH_units = static_cast<uint32_t>((PAGE_HEIGHT_MM / 25.4f) * 3600.0f);
-    push(cmd, {ESC, '(', 'C', 0x04, 0x00});
-    pushU32LE(cmd, pageH_units);
+    // 4. Set Page Format (Margins) — ESC ( c (length 4, 16-bit top and bottom margins)
+    uint16_t topMargin_units = static_cast<uint16_t>(MARGIN_TOP_DOTS * settings_.dpiY / MAX_DPI_Y);
+    uint16_t botMargin_units = static_cast<uint16_t>(pageH_units - (MARGIN_BOTTOM_DOTS * settings_.dpiY / MAX_DPI_Y));
+    push(cmd, {ESC, '(', 'c', 0x04, 0x00});
+    pushU16LE(cmd, topMargin_units);
+    pushU16LE(cmd, botMargin_units);
 
-    // 5. Set Page Format (Margins) — ESC ( c (top and bottom margins in 1/3600" units)
-    uint32_t topMargin_units = MARGIN_TOP_DOTS * (3600 / MAX_DPI_Y);
-    uint32_t botMargin_units = pageH_units - (MARGIN_BOTTOM_DOTS * (3600 / MAX_DPI_Y));
-    push(cmd, {ESC, '(', 'c', 0x08, 0x00});
-    pushU32LE(cmd, topMargin_units);
-    pushU32LE(cmd, botMargin_units);
+    // 5. Set Page Dimensions — ESC ( S (length 4, 16-bit width then height)
+    uint16_t pageW_units = static_cast<uint16_t>((PAGE_WIDTH_MM / 25.4f) * settings_.dpiX);
+    push(cmd, {ESC, '(', 'S', 0x04, 0x00});
+    pushU16LE(cmd, pageW_units);
+    pushU16LE(cmd, pageH_units);
 
-    // 6. Set Page Dimensions — ESC ( S (width then height in 1/3600" units)
-    uint32_t pageW_units = static_cast<uint32_t>((PAGE_WIDTH_MM / 25.4f) * 3600.0f);
-    push(cmd, {ESC, '(', 'S', 0x08, 0x00});
-    pushU32LE(cmd, pageW_units);
-    pushU32LE(cmd, pageH_units);
+    // 6. Set Media Type & Quality — ESC ( m
+    push(cmd, {ESC, '(', 'm', 0x02, 0x00, mediaCode(), qualityCode()});
 
-    // 7. Set Media Type & Quality — ESC ( m
-    push(cmd, {ESC, '(', 'm', 0x02, 0x00,
-               mediaCode(), qualityCode()});
-
-    // 8. Select Color Mode — ESC ( K
+    // 7. Select Color Mode — ESC ( K
     uint8_t colParam = (settings_.colorMode == ColorMode::Grayscale) ? 0x00 : 0x01;
     push(cmd, {ESC, '(', 'K', 0x02, 0x00, colParam, 0x00});
+
+    // 8. Select Graphics Mode — ESC ( G (1 byte length, mode 1)
+    // CRITICAL: This must be the final command before raster transfer begins!
+    push(cmd, {ESC, '(', 'G', 0x01, 0x00, 0x01});
 
     return cmd;
 }

@@ -434,7 +434,8 @@ int main() {
                     if (path == "feed" || path == "FEED") {
                         std::cout << "Sending Form Feed (0x0C) to test printer motor/paper feed mechanism...\n";
                         logDebug("Sending Form Feed test to printer...");
-                        uint8_t ffCmd[] = {0x1B, '@', 0x0C};
+                        // Send Form Feed directly without resetting printer buffer
+                        uint8_t ffCmd[] = {0x0D, 0x0C};
                         driver.sendRaw(ffCmd, sizeof(ffCmd));
                         std::cout << "Command sent. Check if the printer pulled or ejected a page.\n";
                         std::cout << "Debug log written to: epson_driver_debug.log\n";
