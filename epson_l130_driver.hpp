@@ -359,7 +359,7 @@ private:
     // Chunk-wise transmission with optional progress reporting
     void transmitBuffer(const std::vector<uint8_t>& buf,
                         ProgressCallback             onProgress,
-                        size_t                       chunkSize = 16384);
+                        size_t                       chunkSize = 4096);
 };
 
 } // namespace epson_l130

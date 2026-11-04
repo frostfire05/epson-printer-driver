@@ -175,20 +175,45 @@ void UsbTransport::releaseInterface() {
 void UsbTransport::write(const uint8_t* data, size_t length) {
     if (!handle_) throw UsbException("USB device not open", 0);
 
-    int transferred = 0;
-    int r = libusb_bulk_transfer(
-        handle_,
-        epOut_,
-        const_cast<uint8_t*>(data),
-        static_cast<int>(length),
-        &transferred,
-        USB_TIMEOUT_MS
-    );
+    size_t totalTransferred = 0;
+    int consecutiveTimeouts = 0;
+    const int maxTimeouts = 20; // Allow printer buffer draining during head movement
 
-    if (r == LIBUSB_ERROR_NO_DEVICE)
-        throw PrinterOffline();
-    if (r < 0 || static_cast<size_t>(transferred) != length)
-        throw UsbTransferError("write", r, length, static_cast<size_t>(transferred));
+    while (totalTransferred < length) {
+        int transferred = 0;
+        int r = libusb_bulk_transfer(
+            handle_,
+            epOut_,
+            const_cast<uint8_t*>(data + totalTransferred),
+            static_cast<int>(length - totalTransferred),
+            &transferred,
+            USB_TIMEOUT_MS
+        );
+
+        if (transferred > 0) {
+            totalTransferred += static_cast<size_t>(transferred);
+            consecutiveTimeouts = 0;
+        }
+
+        if (r == 0) {
+            continue;
+        }
+
+        if (r == LIBUSB_ERROR_NO_DEVICE) {
+            throw PrinterOffline();
+        }
+
+        if (r == LIBUSB_ERROR_TIMEOUT) {
+            ++consecutiveTimeouts;
+            if (consecutiveTimeouts >= maxTimeouts) {
+                throw UsbTransferError("write", r, length, totalTransferred);
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            continue;
+        }
+
+        throw UsbTransferError("write", r, length, totalTransferred);
+    }
 }
 
 void UsbTransport::write(const std::vector<uint8_t>& data) {
