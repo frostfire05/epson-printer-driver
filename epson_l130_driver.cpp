@@ -27,7 +27,47 @@
 #include <thread>
 #include <chrono>
 
+#include <fstream>
+#include <ctime>
+
 namespace epson_l130 {
+
+static std::ofstream g_debugLog;
+static std::string g_debugLogPath = "epson_driver_debug.log";
+
+void initDebugLog(const std::string& filename) {
+    if (g_debugLog.is_open()) g_debugLog.close();
+    g_debugLogPath = filename;
+    g_debugLog.open(filename, std::ios::out | std::ios::trunc);
+    logDebug("=== EPSON L130 Driver Debug Log Started ===", true);
+}
+
+void logDebug(const std::string& msg, bool toConsole) {
+    if (!g_debugLog.is_open()) {
+        g_debugLog.open(g_debugLogPath, std::ios::out | std::ios::app);
+    }
+    auto now = std::chrono::system_clock::now();
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+    std::time_t t = std::chrono::system_clock::to_time_t(now);
+    std::tm tm;
+#ifdef _WIN32
+    localtime_s(&tm, &t);
+#else
+    localtime_r(&t, &tm);
+#endif
+    char timeBuf[64];
+    std::strftime(timeBuf, sizeof(timeBuf), "%Y-%m-%d %H:%M:%S", &tm);
+    std::ostringstream oss;
+    oss << "[" << timeBuf << "." << std::setfill('0') << std::setw(3) << ms.count() << "] " << msg;
+    
+    if (g_debugLog.is_open()) {
+        g_debugLog << oss.str() << std::endl;
+    }
+    if (toConsole) {
+        std::cout << "[DEBUG] " << msg << std::endl;
+    }
+}
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Internal helpers
@@ -120,12 +160,18 @@ void UsbTransport::open() {
         }
     }
 
-    int r = found ? libusb_open(found, &handle_) : LIBUSB_ERROR_NO_DEVICE;
+        int r = found ? libusb_open(found, &handle_) : LIBUSB_ERROR_NO_DEVICE;
     libusb_free_device_list(list, 1);
 
     if (r == LIBUSB_ERROR_NO_DEVICE || !found) { handle_ = nullptr; throw DeviceNotFound(); }
     if (r == LIBUSB_ERROR_ACCESS)              { handle_ = nullptr; throw PermissionDenied(); }
     if (r < 0)                                 { handle_ = nullptr; throw UsbException("Failed to open printer", r); }
+
+    logDebug("USB device opened successfully. VID=0x04B8 PID=0x" + 
+             [&]{ std::ostringstream h; h << std::hex << productId_; return h.str(); }() + 
+             " Interface=" + std::to_string(interface_) + 
+             " BulkOut=0x" + [&]{ std::ostringstream h; h << std::hex << (int)epOut_; return h.str(); }() + 
+             " BulkIn=0x" + [&]{ std::ostringstream h; h << std::hex << (int)epIn_; return h.str(); }());
 
     try {
         claimInterface();
@@ -241,6 +287,35 @@ size_t UsbTransport::read(uint8_t* buf, size_t maxLength) {
     return static_cast<size_t>(transferred);
 }
 
+uint8_t UsbTransport::readPortStatus() {
+    if (!handle_) return 0xFF;
+    uint8_t status = 0;
+    int r = libusb_control_transfer(
+        handle_,
+        LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE,
+        0x01, // GET_PORT_STATUS
+        0,
+        interface_,
+        &status,
+        1,
+        USB_TIMEOUT_MS
+    );
+    if (r < 0) return 0xFF;
+    return status;
+}
+
+std::string UsbTransport::formatPortStatus(uint8_t status) {
+    if (status == 0xFF) return "Port status unavailable / unsupported";
+    std::string res;
+    bool paperOut = (status & 0x20) != 0;
+    bool selected = (status & 0x10) != 0;
+    bool notError = (status & 0x08) != 0;
+    res += (paperOut ? "[ALERT: NO PAPER IN TRAY] " : "[Paper Loaded] ");
+    res += (selected ? "[Online] " : "[Offline] ");
+    res += (notError ? "[Hardware OK]" : "[ALERT: HARDWARE ERROR STATE]");
+    return res;
+}
+
 std::string UsbTransport::readDeviceId() {
     if (!handle_) throw UsbException("USB device not open", 0);
 
@@ -339,36 +414,45 @@ uint32_t EscP2Encoder::dotsPerLineY() const {
 std::vector<uint8_t> EscP2Encoder::buildJobHeader() const {
     std::vector<uint8_t> cmd;
 
-    // 1. Initialise printer  — ESC @
+    // 1. Initialise printer — ESC @
     push(cmd, {ESC, '@'});
 
-    // 2. Set Units — ESC ( U  nn  mm  horizontal  vertical  column_type
-    //    We request 1/3600" base = code 0x0A for 360dpi variant
+    // 2. Select Graphics Mode — ESC ( G (1 byte length, mode 1)
+    push(cmd, {ESC, '(', 'G', 0x01, 0x00, 0x01});
+
+    // 3. Set Units — ESC ( U (length 5, base unit 1/3600 inch)
     push(cmd, {ESC, '(', 'U',
-               0x05, 0x00,                        // data length = 5
-               0x0A,                               // unit = 1/3600 inch
+               0x05, 0x00,
+               0x0A,                               // 1/3600 inch base
                dpiCode(settings_.dpiX),
                dpiCode(settings_.dpiY),
                0x02, 0x00});
 
-    // 3. Set Page Format — ESC ( S  pagelen  pagewidth (in units)
-    uint32_t unitPer720 = 3600 / settings_.dpiX;
-    uint32_t pageW = dotsPerLineX() * unitPer720;
-    uint32_t pageH = dotsPerLineY() * (3600 / settings_.dpiY);
-    push(cmd, {ESC, '(', 'S', 0x08, 0x00});
-    pushU32LE(cmd, pageH);
-    pushU32LE(cmd, pageW);
+    // 4. Set Page Length — ESC ( C (length in 1/3600" units)
+    uint32_t pageH_units = static_cast<uint32_t>((PAGE_HEIGHT_MM / 25.4f) * 3600.0f);
+    push(cmd, {ESC, '(', 'C', 0x04, 0x00});
+    pushU32LE(cmd, pageH_units);
 
-    // 4. Set Media Type — ESC ( m
+    // 5. Set Page Format (Margins) — ESC ( c (top and bottom margins in 1/3600" units)
+    uint32_t topMargin_units = MARGIN_TOP_DOTS * (3600 / MAX_DPI_Y);
+    uint32_t botMargin_units = pageH_units - (MARGIN_BOTTOM_DOTS * (3600 / MAX_DPI_Y));
+    push(cmd, {ESC, '(', 'c', 0x08, 0x00});
+    pushU32LE(cmd, topMargin_units);
+    pushU32LE(cmd, botMargin_units);
+
+    // 6. Set Page Dimensions — ESC ( S (width then height in 1/3600" units)
+    uint32_t pageW_units = static_cast<uint32_t>((PAGE_WIDTH_MM / 25.4f) * 3600.0f);
+    push(cmd, {ESC, '(', 'S', 0x08, 0x00});
+    pushU32LE(cmd, pageW_units);
+    pushU32LE(cmd, pageH_units);
+
+    // 7. Set Media Type & Quality — ESC ( m
     push(cmd, {ESC, '(', 'm', 0x02, 0x00,
                mediaCode(), qualityCode()});
 
-    // 5. Select Color Mode — ESC ( K
+    // 8. Select Color Mode — ESC ( K
     uint8_t colParam = (settings_.colorMode == ColorMode::Grayscale) ? 0x00 : 0x01;
     push(cmd, {ESC, '(', 'K', 0x02, 0x00, colParam, 0x00});
-
-    // 6. Enable raster graphics — ESC ( G
-    push(cmd, {ESC, '(', 'G', 0x01, 0x00, 0x01});
 
     return cmd;
 }
@@ -691,6 +775,15 @@ uint16_t EpsonL130Driver::getProductId() const {
     return transport_.getProductId();
 }
 
+uint8_t EpsonL130Driver::readPortStatus() {
+    return transport_.readPortStatus();
+}
+
+std::string EpsonL130Driver::queryPortStatusString() {
+    uint8_t s = transport_.readPortStatus();
+    return transport_.formatPortStatus(s);
+}
+
 std::string EpsonL130Driver::queryDeviceId() {
     return transport_.readDeviceId();
 }
@@ -771,7 +864,25 @@ void EpsonL130Driver::submitJob(const PrintJob& job, ProgressCallback onProgress
         throw PrintException("Printer not connected — call connect() first");
 
     const auto& data = job.encodedData();
+    logDebug("Starting transmission of " + std::to_string(data.size()) + " bytes to printer...");
+    
+    // Check hardware status before print
+    uint8_t preStatus = transport_.readPortStatus();
+    logDebug("Pre-print Port Status: " + transport_.formatPortStatus(preStatus));
+    if ((preStatus & 0x20) != 0) {
+        logDebug("WARNING: Printer reports NO PAPER in tray before printing!", true);
+    }
+
     transmitBuffer(data, onProgress);
+    logDebug("Transmission complete (100% of bytes written to USB pipe).");
+
+    // Check status after transmission
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    uint8_t postStatus = transport_.readPortStatus();
+    logDebug("Post-print Port Status: " + transport_.formatPortStatus(postStatus));
+    
+    std::string postSt2 = queryStatus();
+    logDebug("Post-print ST2 Query: " + postSt2);
 }
 
 void EpsonL130Driver::transmitBuffer(

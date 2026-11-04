@@ -30,6 +30,9 @@ struct libusb_context;
 
 namespace epson_l130 {
 
+void logDebug(const std::string& msg, bool toConsole = true);
+void initDebugLog(const std::string& filename = "epson_driver_debug.log");
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Constants – EPSON L130 hardware specifications
 // ═══════════════════════════════════════════════════════════════════════════
@@ -167,8 +170,14 @@ public:
     // Convenience: read IEEE 1284 device ID string
     std::string readDeviceId();
 
+    // Read USB Class port status (Paper Out, Selected, Error)
+    uint8_t readPortStatus();
+
     // Read ESC/P2 printer status packet (ST2 format)
     std::vector<uint8_t> readStatusPacket();
+
+    // Human-readable port status interpretation
+    std::string formatPortStatus(uint8_t status);
 
     // Query detected product ID
     uint16_t getProductId() const { return productId_; }
@@ -323,6 +332,10 @@ public:
 
     // Returns human-readable printer status.
     std::string queryStatus();
+
+    // Read USB hardware port status (Paper sensor, Online, Error)
+    uint8_t readPortStatus();
+    std::string queryPortStatusString();
 
     // ── Printing ───────────────────────────────────────────────────────────
 

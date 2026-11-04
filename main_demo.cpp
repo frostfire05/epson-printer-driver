@@ -372,6 +372,9 @@ static void runInteractiveQueue(PrintSpooler& spooler) {
 int main() {
     std::signal(SIGINT, onSigInt);
 
+    initDebugLog("epson_driver_debug.log");
+    logDebug("Starting epson_demo program...");
+
     EpsonL130Driver driver;
 
     // ── Attempt connection ────────────────────────────────────────────────
@@ -409,6 +412,11 @@ int main() {
             std::string devId = driver.queryDeviceId();
             std::cout << "Device ID: " << devId << "\n";
             std::cout << "Status:    " << driver.queryStatus() << "\n";
+            std::string hwStatus = driver.queryPortStatusString();
+            std::cout << "Hardware:  " << hwStatus << "\n";
+            logDebug("Device ID: " + devId);
+            logDebug("ESC/P2 Status: " + driver.queryStatus());
+            logDebug("Hardware Port Status: " + hwStatus);
 
             auto ink = driver.readInkLevels();
             const char* names[] = {"K","C","M","Y"};
@@ -422,7 +430,17 @@ int main() {
             bool printedFile = false;
             while (!printedFile) {
                 try {
-                    std::string path = askLine("File to print (Enter = test pages): ");
+                    std::string path = askLine("File to print (Enter = test pages, 'feed' = test paper load/eject): ");
+                    if (path == "feed" || path == "FEED") {
+                        std::cout << "Sending Form Feed (0x0C) to test printer motor/paper feed mechanism...\n";
+                        logDebug("Sending Form Feed test to printer...");
+                        uint8_t ffCmd[] = {0x1B, '@', 0x0C};
+                        driver.sendRaw(ffCmd, sizeof(ffCmd));
+                        std::cout << "Command sent. Check if the printer pulled or ejected a page.\n";
+                        std::cout << "Debug log written to: epson_driver_debug.log\n";
+                        driver.disconnect();
+                        return 0;
+                    }
                     if (path.empty()) break;
                     FileRequest req = askForFile(path);
                     for (size_t p = 0; p < req.pages.size(); ++p) {
