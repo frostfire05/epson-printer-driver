@@ -1,0 +1,2816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>System Programming Lab Report - Assignments 1 & 2</title>
+<style>
+  @page { size: A4; margin: 14mm 12mm; }
+  * { box-sizing: border-box; }
+  html {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    scroll-behavior: smooth;
+  }
+  body {
+    font-family: Inter, Arial, Helvetica, sans-serif;
+    color: #0f172a;
+    background: #ffffff;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px;
+    line-height: 1.5;
+    font-size: 11pt;
+  }
+  .banner {
+    background: #1e3a5f;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 22px 26px;
+    margin-bottom: 22px;
+    page-break-inside: avoid;
+  }
+  .banner h1 { margin: 0 0 4px; font-size: 22pt; letter-spacing: 0.3px; }
+  .banner .sub { margin: 0 0 14px; font-size: 10.5pt; opacity: 0.85; }
+  .meta { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .meta div {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 9.5pt;
+  }
+  .meta b { display: block; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.6px; opacity: 0.8; margin-bottom: 2px; }
+  
+  /* Index Page & Table of Contents Styles */
+  .index-page {
+    margin-bottom: 38px;
+    page-break-after: always;
+  }
+  .report-header-banner {
+    background: linear-gradient(135deg, #1e3a5f 0%, #152943 100%);
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    border: 1px solid #0f233d;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.08);
+  }
+  .report-header-banner h1 {
+    margin: 0 0 6px;
+    font-size: 20pt;
+    letter-spacing: 0.3px;
+    color: #ffffff;
+  }
+  .report-header-banner .sub {
+    margin: 0 0 16px;
+    font-size: 10.5pt;
+    color: #93c5fd;
+    line-height: 1.4;
+  }
+  .report-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  .report-meta-item {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 9pt;
+  }
+  .report-meta-item b {
+    display: block;
+    font-size: 7.8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #cbd5e1;
+    margin-bottom: 2px;
+  }
+  .index-section-title {
+    font-size: 12.5pt;
+    font-weight: 700;
+    color: #1e3a5f;
+    margin: 22px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 2px solid #cbd5e1;
+    padding-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .members-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .member-card {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-top: 3px solid #1e3a5f;
+    border-radius: 6px;
+    padding: 10px 12px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .member-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06);
+  }
+  .member-card .name {
+    font-weight: 700;
+    font-size: 9.8pt;
+    color: #0f172a;
+    margin-bottom: 2px;
+  }
+  .member-card .roll {
+    font-family: Consolas, monospace;
+    font-size: 8.5pt;
+    color: #475569;
+    margin-bottom: 6px;
+  }
+  .member-card .tasks {
+    font-size: 7.8pt;
+    color: #1e3a5f;
+    background: #e2e8f0;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+    font-weight: 600;
+  }
+  .index-table-wrapper {
+    overflow-x: auto;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    margin-top: 10px;
+    margin-bottom: 24px;
+    background: #ffffff;
+  }
+  .index-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.2pt;
+    text-align: left;
+  }
+  .index-table th {
+    background: #1e3a5f;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 10px 12px;
+    font-size: 8.8pt;
+    letter-spacing: 0.4px;
+    border-right: 1px solid #2d4d77;
+    white-space: nowrap;
+  }
+  .index-table th:last-child {
+    border-right: none;
+  }
+  .index-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    border-right: 1px solid #f1f5f9;
+    vertical-align: middle;
+  }
+  .index-table td:last-child {
+    border-right: none;
+  }
+  .index-table tr:last-child td {
+    border-bottom: none;
+  }
+  .index-table tr:hover td {
+    background-color: #f8fafc;
+  }
+  .index-table .section-header-row td {
+    background: #eef2f7;
+    font-weight: 700;
+    color: #1e3a5f;
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 8px 12px;
+    border-top: 1px solid #cbd5e1;
+    border-bottom: 1px solid #cbd5e1;
+  }
+  .index-table .q-title {
+    font-weight: 600;
+    color: #0f172a;
+    display: block;
+    margin-bottom: 2px;
+    font-size: 9.5pt;
+  }
+  .index-table .q-desc {
+    font-size: 8.5pt;
+    color: #475569;
+    line-height: 1.35;
+  }
+  .index-table .contrib-col {
+    white-space: nowrap;
+  }
+  .index-table .contrib-col strong {
+    color: #0f172a;
+    display: block;
+    font-size: 9pt;
+  }
+  .index-table .badge-roll {
+    font-family: Consolas, monospace;
+    font-size: 8.3pt;
+    color: #64748b;
+  }
+  .jump-btn {
+    display: inline-block;
+    padding: 3px 8px;
+    background: #1e3a5f;
+    color: #ffffff !important;
+    text-decoration: none;
+    font-size: 8.2pt;
+    font-weight: 600;
+    border-radius: 4px;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+  }
+  .jump-btn:hover {
+    background: #2563eb;
+  }
+  .qhead-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .qhead-top h3 {
+    margin: 0;
+    font-size: 12.5pt;
+    color: #1e3a5f;
+  }
+  .contributor-badge {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-left: 3px solid #1e3a5f;
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-size: 8.5pt;
+    color: #334155;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .contributor-badge strong {
+    color: #0f172a;
+  }
+  .contributor-badge .roll {
+    font-family: Consolas, monospace;
+    color: #64748b;
+  }
+  .back-top {
+    font-size: 8pt;
+    color: #64748b;
+    text-decoration: none;
+    margin-left: 6px;
+    padding-left: 6px;
+    border-left: 1px solid #cbd5e1;
+  }
+  .back-top:hover {
+    color: #1e3a5f;
+    text-decoration: underline;
+  }
+
+  h2.main {
+    font-size: 17pt;
+    border-bottom: 3px solid #1e3a5f;
+    padding-bottom: 6px;
+    margin: 8px 0 18px;
+    color: #1e3a5f;
+  }
+  .qblock { margin-bottom: 34px; }
+  .qhead {
+    background: #eef2f7;
+    border-left: 5px solid #1e3a5f;
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    page-break-inside: avoid;
+    page-break-after: avoid;
+  }
+  .qhead h3 { margin: 0 0 3px; font-size: 12.5pt; color: #1e3a5f; }
+  .qhead p { margin: 0; font-size: 10.5pt; }
+  .label {
+    font-size: 8.5pt; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.8px; color: #475569; margin: 12px 0 4px;
+    page-break-after: avoid;
+  }
+  .codebox {
+    background: #f8f9fa;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin: 0;
+    overflow-x: auto;
+  }
+  .codebox code {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 8.8pt;
+    line-height: 1.38;
+    color: #0f172a;
+    white-space: pre;
+  }
+  .outbox {
+    background: #1e293b;
+    border: 1px solid #0f172a;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 6px;
+    page-break-inside: avoid;
+  }
+  .outbox .bar {
+    background: #334155;
+    color: #e2e8f0;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 8.5pt;
+    padding: 5px 12px;
+    border-bottom: 1px solid #0f172a;
+  }
+  .outbox pre {
+    margin: 0;
+    padding: 12px 14px;
+    color: #f8fafc;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 9pt;
+    line-height: 1.4;
+    white-space: pre-wrap;
+  }
+  .outbox .in { color: #fde68a; }
+  .outbox .dim { color: #94a3b8; }
+  @media print {
+    .banner { display: none; }
+    .index-page { page-break-after: always; margin-bottom: 0; }
+    .report-header-banner { background: #1e3a5f !important; color: #ffffff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .jump-btn { display: none; }
+    .back-top { display: none; }
+    h2.main { margin-top: 0; page-break-after: avoid; }
+    body { padding: 0; max-width: none; font-size: 10.5pt; }
+    .codebox { overflow: visible; }
+    .codebox code { font-size: 8pt; }
+    .outbox pre { font-size: 8.5pt; }
+    .index-table th { background: #1e3a5f !important; color: #ffffff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .index-table .section-header-row td { background: #eef2f7 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     INDEX PAGE & TABLE OF CONTENTS
+     ============================================================ -->
+<div class="index-page" id="index-page">
+  <div class="report-header-banner">
+    <h1>System Programming Lab Report</h1>
+    <div class="sub">Comprehensive Problem Solutions &bull; 8086 MASM Assembly Language Programming</div>
+    <div class="report-meta-grid">
+      <div class="report-meta-item">
+        <b>Subject</b>
+        System Programming Laboratory
+      </div>
+      <div class="report-meta-item">
+        <b>Architecture</b>
+        Intel 8086 / MASM (DOSBox)
+      </div>
+      <div class="report-meta-item">
+        <b>Deliverables</b>
+        Assignments 1 &amp; 2 (10 Problems)
+      </div>
+      <div class="report-meta-item">
+        <b>Distribution</b>
+        5 Group Members (Mapped by Question)
+      </div>
+    </div>
+  </div>
+
+  <div class="index-section-title">Lab Group Members</div>
+  <div class="members-grid">
+    <div class="member-card">
+      <div class="name">Suprit Banerjee</div>
+      <div class="roll">002410501052</div>
+      <span class="tasks">Assigned: Q1 (A1 &amp; A2)</span>
+    </div>
+    <div class="member-card">
+      <div class="name">Romit Datta</div>
+      <div class="roll">002410501032</div>
+      <span class="tasks">Assigned: Q2 (A1 &amp; A2)</span>
+    </div>
+    <div class="member-card">
+      <div class="name">Golam Masum Basar</div>
+      <div class="roll">00241505057</div>
+      <span class="tasks">Assigned: Q3 (A1 &amp; A2)</span>
+    </div>
+    <div class="member-card">
+      <div class="name">Somdev Ganguli</div>
+      <div class="roll">002410501033</div>
+      <span class="tasks">Assigned: Q4 (A1 &amp; A2)</span>
+    </div>
+    <div class="member-card">
+      <div class="name">Vibhan Dutta</div>
+      <div class="roll">002410501041</div>
+      <span class="tasks">Assigned: Q5 (A1 &amp; A2)</span>
+    </div>
+  </div>
+
+  <div class="index-section-title">Index &amp; Contribution Matrix</div>
+  <div class="index-table-wrapper">
+    <table class="index-table">
+      <thead>
+        <tr>
+          <th style="width: 70px;">Sl. No.</th>
+          <th>Problem Statement &amp; Key Requirements</th>
+          <th style="width: 200px;">Contributor &amp; Roll No.</th>
+          <th style="width: 80px; text-align: center;">Jump</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- ASSIGNMENT 1 -->
+        <tr class="section-header-row">
+          <td colspan="4">Assignment 1 &mdash; Fundamental Data Transfer, Arithmetic &amp; Strings</td>
+        </tr>
+        <tr>
+          <td style="font-weight: 700; color: #1e3a5f;">A1 &ndash; Q1</td>
+          <td>
+            <span class="q-title">Block Data Transfer with Element Arithmetic</span>
+            <span class="q-desc">Transfer a 10-byte data block from 3000H to 4000H, multiplying each element by 5 and adding 10 before storage.</span>
+          </td>
+          <td class="contrib-col">
+            <strong>Suprit Banerjee</strong>
+            <span class="badge-roll">002410501052</span>
+          </td>
+          <td style="text-align: center;">
+            <a href="#a1q1" class="jump-btn">View &rarr;</a>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-weight: 700; color: #1e3a5f;">A1 &ndash; Q2</td>
+          <td>
+            <span class="q-title">Zig-Zag Array Ordering in Memory</span>
+            <span class="q-desc">Reorganize and store an array of 20 numbers in zig-zag order (alternating less than and greater than) at location 4000H.</span>
+          </td>
+          <td class="contrib-col">
+            <strong>Romit Datta</strong>
+            <span class="badge-roll">002410501032</span>
+          </td>
+          <td style="text-align: center;">
+            <a href="#a1q2" class="jump-btn">View &rarr;</a>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-weight: 700; color: #1e3a5f;">A1 &ndash; Q3</td>
+          <td>
+            <span class="q-title">Hexadecimal to ASCII Equivalent Conversion</span>
+            <span class="q-desc">Convert a 16-bit / byte hexadecimal value into its printable ASCII string representation and display.</span>
+          </td>
+          <td class="contrib-col">
+            <strong>Golam Masum Basar</strong>
+            <span class="badge-roll">00241505057</span>
+          </td>
+          <td style="text-align: center;">
+            <a href="#a1q3" class="jump-btn">View &rarr;</a>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-weight: 700; color: #1e3a5f;">A1 &ndash; Q4</td>
+          <td>
+            <span class="q-title">Interactive Multi-Operation Calculator</span>
+            <span class="q-desc">Menu-driven integer calculator implementing addition, subtraction, multiplication, and division with signed output support.</span>
+          </td>
+          <td class="contrib-col">
+            <strong>Somdev Ganguli</strong>
+            <span class="badge-roll">002410501033</span>
+          </td>
+          <td style="text-align: center;">
+            <a href="#a1q4" class="jump-btn">View &rarr;</a>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-weight: 700; color: #1e3a5f;">A1 &ndash; Q5</td>
+          <td>
+            <span class="q-title">Modular Assembly String Operations Library</span>
+            <span class="q-desc">Implement reusable subroutines for string operations: STRLEN (length calculation), STRCMP (comparison), and STRREV (in-place reversal).</span>
+          </td>
+          <td class="contrib-col">
+            <strong>Vibhan Dutta</strong>
+            <span class="badge-roll">002410501041</span>
+          </td>
+          <td style="text-align: center;">
+            <a href="#a1q5" class="jump-btn">View &rarr;</a>
+          </td>
+        </tr>
+
+        <!-- ASSIGNMENT 2 -->
+        <tr class="section-header-row">
+          <td colspan="4">Assignment 2 &mdash; System Simulation, Shell Emulator &amp; Data Structures</td>
+        </tr>
+        <tr>
+          <td style="font-weight: 700; color: #1e3a5f;">A2 &ndash; Q1</td>
+          <td>
+            <span class="q-title">Boot-Level BIOS Password Verification System</span>
+            <span class="q-desc">Simulate BIOS password authentication with masked/hidden keystroke input (no echo), hardcoded comparison, and a 3-attempt lockout using INT 16h/INT 10h.</span>
+          </td>
+          <td class="contrib-col">
+            <strong>Suprit Banerjee</strong>
+            <span class="badge-roll">002410501052</span>
+          </td>
+          <td style="text-align: center;">
+            <a href="#a2q1" class="jump-btn">View &rarr;</a>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-weight: 700; color: #1e3a5f;">A2 &ndash; Q2</td>
+          <td>
+            <span class="q-title">Interactive Command-Line Shell Emulator</span>
+            <span class="q-desc">Design a DOS CLI emulator parsing and handling commands: DIR (file listing), TYPE (file display), COPY (file transfer), and EXIT via INT 21h.</span>
+          </td>
+          <td class="contrib-col">
+            <strong>Romit Datta</strong>
+            <span class="badge-roll">002410501032</span>
+          </td>
+          <td style="text-align: center;">
+            <a href="#a2q2" class="jump-btn">View &rarr;</a>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-weight: 700; color: #1e3a5f;">A2 &ndash; Q3</td>
+          <td>
+            <span class="q-title">FCFS Disk Scheduling Algorithm Simulation</span>
+            <span class="q-desc">Simulate First-Come-First-Served disk arm movement, computing track differences and displaying total head movement for a request queue.</span>
+          </td>
+          <td class="contrib-col">
+            <strong>Golam Masum Basar</strong>
+            <span class="badge-roll">00241505057</span>
+          </td>
+          <td style="text-align: center;">
+            <a href="#a2q3" class="jump-btn">View &rarr;</a>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-weight: 700; color: #1e3a5f;">A2 &ndash; Q4</td>
+          <td>
+            <span class="q-title">Interactive Dynamic Array Sorting Program</span>
+            <span class="q-desc">Prompt user for array size n and n numeric elements, perform ascending sort (bubble sort algorithm), and display the sorted sequence.</span>
+          </td>
+          <td class="contrib-col">
+            <strong>Somdev Ganguli</strong>
+            <span class="badge-roll">002410501033</span>
+          </td>
+          <td style="text-align: center;">
+            <a href="#a2q4" class="jump-btn">View &rarr;</a>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-weight: 700; color: #1e3a5f;">A2 &ndash; Q5</td>
+          <td>
+            <span class="q-title">Stack-Based Balanced Bracket &amp; Nesting Validator</span>
+            <span class="q-desc">Evaluate multi-type bracket strings ((), {}, []) simulating a stack to verify balanced pairing and nesting, reporting Balanced or Non-Balanced.</span>
+          </td>
+          <td class="contrib-col">
+            <strong>Vibhan Dutta</strong>
+            <span class="badge-roll">002410501041</span>
+          </td>
+          <td style="text-align: center;">
+            <a href="#a2q5" class="jump-btn">View &rarr;</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<h2 class="main">Assignment 1</h2>
+
+<!-- ===================== QUESTION 1 ===================== -->
+<div class="qblock" id="a1q1">
+  <div class="qhead">
+    <div class="qhead-top">
+      <h3>Question 1</h3>
+      <span class="contributor-badge">Contributor: <strong>Suprit Banerjee</strong> <span class="roll">(002410501052)</span> <a href="#index-page" class="back-top">&uarr; Index</a></span>
+    </div>
+    <p>Write an MASM program to transfer a block of 10 data bytes from one memory location, 3000H, to another memory location, 4000H. Before transfer, multiply 5, then add 10 to each element.</p>
+  </div>
+  <div class="label">MASM Source Code</div>
+<pre class="codebox"><code>.MODEL SMALL
+.STACK 100H
+
+PRINT MACRO TXT              ; print a '$'-terminated string
+    LEA DX, TXT
+    MOV AH, 09H
+    INT 21H
+ENDM
+
+.DATA
+MSG1 DB 'Source block (2000:3000H) : $'
+MSG2 DB 0DH,0AH,'Dest block   (2000:4000H) : $'
+MSG3 DB 0DH,0AH,'Each element = (source x 5) + 10$'
+CRLF DB 0DH,0AH,'$'
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX               ; DS -> messages
+    MOV AX, 2000H
+    MOV ES, AX               ; ES -> segment holding both blocks (offsets 3000H / 4000H)
+
+    ; ---- fill source block 3000H with 1..10 ----
+    MOV SI, 3000H            ; SI = source pointer
+    MOV CX, 10               ; CX = element count
+    MOV AL, 1
+FILLLP:
+    MOV ES:[SI], AL
+    INC AL
+    INC SI
+    LOOP FILLLP
+
+    ; ---- transfer: dest = source * 5 + 10 ----
+    MOV SI, 3000H            ; SI = source
+    MOV DI, 4000H            ; DI = destination
+    MOV CX, 10
+    MOV BL, 5                ; BL = multiplier
+XFER:
+    MOV AL, ES:[SI]          ; AL = source byte
+    MUL BL                   ; AX = AL * 5
+    ADD AL, 10               ; AL = AL + 10
+    MOV ES:[DI], AL          ; store at destination
+    INC SI
+    INC DI
+    LOOP XFER
+
+    ; ---- display both blocks ----
+    PRINT MSG1
+    MOV SI, 3000H
+    MOV CX, 10
+    CALL SHOWBLK
+    PRINT MSG2
+    MOV SI, 4000H
+    MOV CX, 10
+    CALL SHOWBLK
+    PRINT MSG3
+    PRINT CRLF
+
+    MOV AX, 4C00H            ; exit to DOS
+    INT 21H
+MAIN ENDP
+
+; SHOWBLK: print CX bytes starting at ES:SI as decimal numbers
+SHOWBLK PROC
+SB1:
+    MOV AL, ES:[SI]
+    XOR AH, AH
+    CALL PRINT_NUM
+    MOV DL, ' '
+    MOV AH, 02H
+    INT 21H
+    INC SI
+    LOOP SB1
+    RET
+SHOWBLK ENDP
+
+; PRINT_NUM: print unsigned number in AX (all registers preserved)
+PRINT_NUM PROC
+    PUSH AX
+    PUSH BX
+    PUSH CX
+    PUSH DX
+    MOV BX, 10               ; divisor
+    XOR CX, CX               ; digit counter
+PN1:
+    XOR DX, DX
+    DIV BX                   ; AX = quotient, DX = remainder digit
+    PUSH DX
+    INC CX
+    OR AX, AX
+    JNZ PN1
+PN2:
+    POP DX
+    ADD DL, '0'
+    MOV AH, 02H
+    INT 21H
+    LOOP PN2
+    POP DX
+    POP CX
+    POP BX
+    POP AX
+    RET
+PRINT_NUM ENDP
+
+END MAIN</code></pre>
+  <div class="label">Output</div>
+  <div class="outbox">
+    <div class="bar">DOSBox 0.74 &mdash; C:\LAB&gt;</div>
+<pre>C:\LAB&gt;MASM Q1.ASM;
+C:\LAB&gt;LINK Q1.OBJ;
+C:\LAB&gt;<span class="in">Q1.EXE</span>
+Source block (2000:3000H) : 1 2 3 4 5 6 7 8 9 10
+Dest block   (2000:4000H) : 15 20 25 30 35 40 45 50 55 60
+Each element = (source x 5) + 10
+
+<span class="dim">; Memory / register state verified with DEBUG</span>
+C:\LAB&gt;<span class="in">DEBUG Q1.EXE</span>
+-<span class="in">D 2000:3000 3009</span>
+2000:3000  01 02 03 04 05 06 07 08-09 0A
+-<span class="in">D 2000:4000 4009</span>
+2000:4000  0F 14 19 1E 23 28 2D 32-37 3C
+<span class="dim">; after the XFER loop (selected registers)</span>
+AX=003C  BX=0005  CX=0000  SI=300A  DI=400A
+-<span class="in">Q</span></pre>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 2 ===================== -->
+<div class="qblock" id="a1q2">
+  <div class="qhead">
+    <div class="qhead-top">
+      <h3>Question 2</h3>
+      <span class="contributor-badge">Contributor: <strong>Romit Datta</strong> <span class="roll">(002410501032)</span> <a href="#index-page" class="back-top">&uarr; Index</a></span>
+    </div>
+    <p>Write an MASM program to store an array of 20 numbers in zig-zag (alternating less than and greater than) order in memory location 4000H.</p>
+  </div>
+  <div class="label">MASM Source Code</div>
+<pre class="codebox"><code>.MODEL SMALL
+.STACK 100H
+
+PRINT MACRO TXT
+    LEA DX, TXT
+    MOV AH, 09H
+    INT 21H
+ENDM
+
+.DATA
+ARR  DB 4,3,7,8,6,2,1,9,12,5,15,11,10,20,18,14,19,13,17,16   ; 20 input numbers
+MSG1 DB 'Original array (copied to 2000:4000H):',0DH,0AH,'$'
+MSG2 DB 0DH,0AH,0DH,0AH,'Zig-zag array (a0 &lt; a1 &gt; a2 &lt; a3 ...):',0DH,0AH,'$'
+CRLF DB 0DH,0AH,'$'
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX               ; DS -> data segment
+    MOV AX, 2000H
+    MOV ES, AX               ; ES -> segment that holds offset 4000H
+
+    ; ---- copy 20 numbers to ES:4000H ----
+    LEA SI, ARR              ; SI = source pointer (DS)
+    MOV DI, 4000H            ; DI = destination pointer (ES)
+    MOV CX, 20               ; CX = count
+CPYLP:
+    MOV AL, [SI]
+    MOV ES:[DI], AL
+    INC SI
+    INC DI
+    LOOP CPYLP
+
+    PRINT MSG1
+    MOV SI, 4000H
+    MOV CX, 20
+    CALL SHOWBLK
+
+    ; ---- zig-zag pass: even i needs a[i] &lt; a[i+1], odd i needs a[i] &gt; a[i+1] ----
+    MOV SI, 4000H            ; SI = pointer to a[i]
+    MOV CX, 19               ; 19 adjacent pairs
+    MOV DL, 0                ; DL = 0 (even index) / 1 (odd index)
+ZZ:
+    MOV AL, ES:[SI]          ; AL = a[i]
+    MOV AH, ES:[SI+1]        ; AH = a[i+1]
+    CMP DL, 0
+    JNE ODDIDX
+    CMP AL, AH               ; even index: need AL &lt;= AH
+    JBE NOSWAP
+    JMP DOSWAP
+ODDIDX:
+    CMP AL, AH               ; odd index: need AL &gt;= AH
+    JAE NOSWAP
+DOSWAP:
+    MOV ES:[SI], AH          ; swap the pair
+    MOV ES:[SI+1], AL
+NOSWAP:
+    XOR DL, 1                ; toggle even/odd
+    INC SI
+    LOOP ZZ
+
+    PRINT MSG2
+    MOV SI, 4000H
+    MOV CX, 20
+    CALL SHOWBLK
+    PRINT CRLF
+
+    MOV AX, 4C00H
+    INT 21H
+MAIN ENDP
+
+; SHOWBLK: print CX bytes starting at ES:SI as decimal numbers
+SHOWBLK PROC
+SB1:
+    MOV AL, ES:[SI]
+    XOR AH, AH
+    CALL PRINT_NUM
+    MOV DL, ' '
+    MOV AH, 02H
+    INT 21H
+    INC SI
+    LOOP SB1
+    RET
+SHOWBLK ENDP
+
+; PRINT_NUM: print unsigned number in AX (all registers preserved)
+PRINT_NUM PROC
+    PUSH AX
+    PUSH BX
+    PUSH CX
+    PUSH DX
+    MOV BX, 10
+    XOR CX, CX
+PN1:
+    XOR DX, DX
+    DIV BX
+    PUSH DX
+    INC CX
+    OR AX, AX
+    JNZ PN1
+PN2:
+    POP DX
+    ADD DL, '0'
+    MOV AH, 02H
+    INT 21H
+    LOOP PN2
+    POP DX
+    POP CX
+    POP BX
+    POP AX
+    RET
+PRINT_NUM ENDP
+
+END MAIN</code></pre>
+  <div class="label">Output</div>
+  <div class="outbox">
+    <div class="bar">DOSBox 0.74 &mdash; C:\LAB&gt;</div>
+<pre>C:\LAB&gt;MASM Q2.ASM;
+C:\LAB&gt;LINK Q2.OBJ;
+C:\LAB&gt;<span class="in">Q2.EXE</span>
+Original array (copied to 2000:4000H):
+4 3 7 8 6 2 1 9 12 5 15 11 10 20 18 14 19 13 17 16
+
+Zig-zag array (a0 &lt; a1 &gt; a2 &lt; a3 ...):
+3 7 4 8 2 6 1 12 5 15 9 11 10 20 14 19 13 18 16 17
+
+<span class="dim">; Memory / register state verified with DEBUG</span>
+C:\LAB&gt;<span class="in">DEBUG Q2.EXE</span>
+-<span class="in">D 2000:4000 4013</span>
+2000:4000  03 07 04 08 02 06 01 0C-05 0F 09 0B 0A 14 0E 13
+2000:4010  0D 12 10 11
+<span class="dim">; after the ZZ loop (selected registers)</span>
+CX=0000  SI=4013  DL=01
+-<span class="in">Q</span></pre>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 3 ===================== -->
+<div class="qblock" id="a1q3">
+  <div class="qhead">
+    <div class="qhead-top">
+      <h3>Question 3</h3>
+      <span class="contributor-badge">Contributor: <strong>Golam Masum Basar</strong> <span class="roll">(00241505057)</span> <a href="#index-page" class="back-top">&uarr; Index</a></span>
+    </div>
+    <p>Write an MASM program to convert a hexadecimal number into its equivalent ASCII.</p>
+  </div>
+  <div class="label">MASM Source Code</div>
+<pre class="codebox"><code>.MODEL SMALL
+.STACK 100H
+
+PRINT MACRO TXT              ; print a '$'-terminated string
+    LEA DX, TXT
+    MOV AH, 09H
+    INT 21H
+ENDM
+
+PUTC MACRO CHR               ; print one character
+    MOV DL, CHR
+    MOV AH, 02H
+    INT 21H
+ENDM
+
+.DATA
+HEXNUM DW 2F5AH              ; 16-bit hexadecimal number to convert
+BUF    DB 4 DUP(?),'$'       ; receives the 4 ASCII characters
+MSG1   DB 'Hex number (HEXNUM)  = 2F5AH',0DH,0AH,'$'
+MSG2   DB 'ASCII characters     : $'
+MSG3   DB 0DH,0AH,'ASCII codes (hex)    : $'
+CRLF   DB 0DH,0AH,'$'
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+
+    MOV AX, HEXNUM           ; AX = number to convert
+    LEA DI, BUF              ; DI = output buffer pointer
+    MOV CH, 4                ; CH = 4 nibbles to process
+CONVLP:
+    MOV CL, 4
+    ROL AX, CL               ; bring the next (highest) nibble into AL bits 3-0
+    PUSH AX                  ; keep rotated value
+    AND AL, 0FH              ; isolate the nibble
+    CALL NIB2ASC             ; AL = ASCII character
+    MOV [DI], AL             ; store in buffer
+    INC DI
+    POP AX
+    DEC CH
+    JNZ CONVLP
+
+    PRINT MSG1
+    PRINT MSG2
+    PRINT BUF                ; show the converted ASCII string
+    PRINT MSG3
+
+    ; ---- show the ASCII code of every character in hex ----
+    LEA SI, BUF              ; SI = pointer to the characters
+    MOV CH, 4
+SHOWC:
+    MOV AL, [SI]             ; AL = ASCII code
+    PUSH AX
+    MOV CL, 4
+    SHR AL, CL               ; high nibble of the code
+    CALL NIB2ASC
+    PUTC AL
+    POP AX
+    AND AL, 0FH              ; low nibble of the code
+    CALL NIB2ASC
+    PUTC AL
+    PUTC 'H'
+    PUTC ' '
+    INC SI
+    DEC CH
+    JNZ SHOWC
+    PRINT CRLF
+
+    MOV AX, 4C00H
+    INT 21H
+MAIN ENDP
+
+; NIB2ASC: AL = nibble (0-0FH)  -&gt;  AL = ASCII '0'-'9' or 'A'-'F'
+NIB2ASC PROC
+    CMP AL, 9
+    JBE DIGIT
+    ADD AL, 7                ; skip the gap between '9' and 'A'
+DIGIT:
+    ADD AL, '0'
+    RET
+NIB2ASC ENDP
+
+END MAIN</code></pre>
+  <div class="label">Output</div>
+  <div class="outbox">
+    <div class="bar">DOSBox 0.74 &mdash; C:\LAB&gt;</div>
+<pre>C:\LAB&gt;MASM Q3.ASM;
+C:\LAB&gt;LINK Q3.OBJ;
+C:\LAB&gt;<span class="in">Q3.EXE</span>
+Hex number (HEXNUM)  = 2F5AH
+ASCII characters     : 2F5A
+ASCII codes (hex)    : 32H 46H 35H 41H
+
+<span class="dim">; Memory state verified with DEBUG (HEXNUM is stored little-endian)</span>
+C:\LAB&gt;<span class="in">DEBUG Q3.EXE</span>
+-<span class="in">D 0B5A:0000 0006</span>
+0B5A:0000  5A 2F 32 46 35 41 24
+           ----- -----------
+           HEXNUM  BUF = '2','F','5','A','$'
+-<span class="in">Q</span></pre>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 4 ===================== -->
+<div class="qblock" id="a1q4">
+  <div class="qhead">
+    <div class="qhead-top">
+      <h3>Question 4</h3>
+      <span class="contributor-badge">Contributor: <strong>Somdev Ganguli</strong> <span class="roll">(002410501033)</span> <a href="#index-page" class="back-top">&uarr; Index</a></span>
+    </div>
+    <p>Write an MASM program to implement a basic calculator for arithmetic operations.</p>
+  </div>
+  <div class="label">MASM Source Code</div>
+<pre class="codebox"><code>.MODEL SMALL
+.STACK 100H
+
+PRINT MACRO TXT
+    LEA DX, TXT
+    MOV AH, 09H
+    INT 21H
+ENDM
+
+.DATA
+P1      DB 'Enter first number  : $'
+P_OP    DB 'Enter operator (+ - * /) : $'
+P2      DB 'Enter second number : $'
+RESMSG  DB 'Result = $'
+REMMSG  DB '  remainder $'
+ERRDZ   DB 'Error: division by zero!$'
+ERROP   DB 'Error: invalid operator!$'
+OVFMSG  DB 'Error: result exceeds 16 bits!$'
+AGAINM  DB 'Calculate again (Y/N)? $'
+CRLF    DB 0DH,0AH,'$'
+NUM1    DW ?
+NUM2    DW ?
+OPR     DB ?
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+
+START:
+    PRINT P1
+    CALL READ_NUM            ; AX = first operand
+    MOV NUM1, AX
+    PRINT CRLF
+    PRINT P_OP
+    MOV AH, 01H              ; read operator character
+    INT 21H
+    MOV OPR, AL
+    PRINT CRLF
+    PRINT P2
+    CALL READ_NUM            ; AX = second operand
+    MOV NUM2, AX
+    PRINT CRLF
+    PRINT RESMSG
+
+    MOV AX, NUM1             ; AX = operand 1
+    MOV BX, NUM2             ; BX = operand 2
+    CMP OPR, '+'
+    JE DO_ADD
+    CMP OPR, '-'
+    JE DO_SUB
+    CMP OPR, '*'
+    JE DO_MUL
+    CMP OPR, '/'
+    JE DO_DIV
+    PRINT ERROP
+    JMP ASKAGAIN
+
+DO_ADD:
+    ADD AX, BX
+    CALL PRINT_NUM
+    JMP ASKAGAIN
+
+DO_SUB:
+    SUB AX, BX
+    JNB SUBPOS               ; no borrow: result is positive
+    NEG AX                   ; negative result: take magnitude
+    PUSH AX
+    MOV DL, '-'
+    MOV AH, 02H
+    INT 21H                  ; print the minus sign
+    POP AX
+SUBPOS:
+    CALL PRINT_NUM
+    JMP ASKAGAIN
+
+DO_MUL:
+    MUL BX                   ; DX:AX = AX * BX
+    OR DX, DX
+    JZ MULOK
+    PRINT OVFMSG
+    JMP ASKAGAIN
+MULOK:
+    CALL PRINT_NUM
+    JMP ASKAGAIN
+
+DO_DIV:
+    OR BX, BX
+    JNZ DIVOK
+    PRINT ERRDZ
+    JMP ASKAGAIN
+DIVOK:
+    XOR DX, DX               ; DX:AX = dividend
+    DIV BX                   ; AX = quotient, DX = remainder
+    CALL PRINT_NUM
+    PUSH DX
+    PRINT REMMSG
+    POP AX
+    CALL PRINT_NUM           ; print remainder
+
+ASKAGAIN:
+    PRINT CRLF
+    PRINT AGAINM
+    MOV AH, 01H
+    INT 21H
+    MOV BL, AL               ; save the answer
+    PRINT CRLF
+    PRINT CRLF
+    CMP BL, 'Y'
+    JE RESTART
+    CMP BL, 'y'
+    JE RESTART
+    MOV AX, 4C00H            ; exit to DOS
+    INT 21H
+RESTART:
+    JMP START
+MAIN ENDP
+
+; READ_NUM: read an unsigned decimal number (ends with Enter); returns AX
+READ_NUM PROC
+    PUSH BX
+    PUSH CX
+    PUSH DX
+    XOR BX, BX               ; BX = running value
+RN1:
+    MOV AH, 01H
+    INT 21H
+    CMP AL, 0DH              ; Enter ends the number
+    JE RN2
+    CMP AL, '0'
+    JB RN1                   ; ignore non-digits
+    CMP AL, '9'
+    JA RN1
+    SUB AL, '0'
+    XOR AH, AH
+    MOV CX, AX               ; CX = new digit
+    MOV AX, BX
+    MOV DX, 10
+    MUL DX                   ; AX = value * 10
+    ADD AX, CX               ; add digit
+    MOV BX, AX
+    JMP RN1
+RN2:
+    MOV AX, BX
+    POP DX
+    POP CX
+    POP BX
+    RET
+READ_NUM ENDP
+
+; PRINT_NUM: print unsigned number in AX (all registers preserved)
+PRINT_NUM PROC
+    PUSH AX
+    PUSH BX
+    PUSH CX
+    PUSH DX
+    MOV BX, 10
+    XOR CX, CX
+PN1:
+    XOR DX, DX
+    DIV BX
+    PUSH DX
+    INC CX
+    OR AX, AX
+    JNZ PN1
+PN2:
+    POP DX
+    ADD DL, '0'
+    MOV AH, 02H
+    INT 21H
+    LOOP PN2
+    POP DX
+    POP CX
+    POP BX
+    POP AX
+    RET
+PRINT_NUM ENDP
+
+END MAIN</code></pre>
+  <div class="label">Output</div>
+  <div class="outbox">
+    <div class="bar">DOSBox 0.74 &mdash; C:\LAB&gt;</div>
+<pre>C:\LAB&gt;MASM Q4.ASM;
+C:\LAB&gt;LINK Q4.OBJ;
+C:\LAB&gt;<span class="in">Q4.EXE</span>
+Enter first number  : <span class="in">125</span>
+Enter operator (+ - * /) : <span class="in">+</span>
+Enter second number : <span class="in">75</span>
+Result = 200
+Calculate again (Y/N)? <span class="in">Y</span>
+
+Enter first number  : <span class="in">45</span>
+Enter operator (+ - * /) : <span class="in">-</span>
+Enter second number : <span class="in">90</span>
+Result = -45
+Calculate again (Y/N)? <span class="in">Y</span>
+
+Enter first number  : <span class="in">12</span>
+Enter operator (+ - * /) : <span class="in">*</span>
+Enter second number : <span class="in">13</span>
+Result = 156
+Calculate again (Y/N)? <span class="in">Y</span>
+
+Enter first number  : <span class="in">100</span>
+Enter operator (+ - * /) : <span class="in">/</span>
+Enter second number : <span class="in">7</span>
+Result = 14  remainder 2
+Calculate again (Y/N)? <span class="in">Y</span>
+
+Enter first number  : <span class="in">9</span>
+Enter operator (+ - * /) : <span class="in">/</span>
+Enter second number : <span class="in">0</span>
+Result = Error: division by zero!
+Calculate again (Y/N)? <span class="in">N</span>
+
+<span class="dim">; Register state at DO_MUL for 12 * 13 (DEBUG)</span>
+AX=009C  BX=000D  DX=0000      <span class="dim">; AX = 156 decimal</span></pre>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 5 ===================== -->
+<div class="qblock" id="a1q5">
+  <div class="qhead">
+    <div class="qhead-top">
+      <h3>Question 5</h3>
+      <span class="contributor-badge">Contributor: <strong>Vibhan Dutta</strong> <span class="roll">(002410501041)</span> <a href="#index-page" class="back-top">&uarr; Index</a></span>
+    </div>
+    <p>Implement a library of string operations using assembly: (a) STRLEN: Return length of string, (b) STRCMP: Compare two strings, (c) STRREV: Reverse string in place.</p>
+  </div>
+  <div class="label">MASM Source Code</div>
+<pre class="codebox"><code>.MODEL SMALL
+.STACK 100H
+
+PRINT MACRO TXT
+    LEA DX, TXT
+    MOV AH, 09H
+    INT 21H
+ENDM
+
+.DATA
+STR1   DB 'Assembly',0              ; all strings are NULL (0) terminated
+STR2   DB 'Assembly',0
+STR3   DB 'Assemble',0
+STR4   DB 'System Programming',0
+T_LEN  DB '(a) STRLEN',0DH,0AH,'$'
+L1     DB '  Length of "Assembly"           = $'
+L2     DB '  Length of "System Programming" = $'
+T_CMP  DB '(b) STRCMP',0DH,0AH,'$'
+C1     DB '  "Assembly" vs "Assembly" : $'
+C2     DB '  "Assembly" vs "Assemble" : $'
+C3     DB '  "Assemble" vs "Assembly" : $'
+TEQ    DB 'EQUAL (AL = 00H)$'
+TGT    DB 'STR1 GREATER (AL = 01H)$'
+TLT    DB 'STR1 LESS (AL = FFH)$'
+T_REV  DB '(c) STRREV',0DH,0AH,'$'
+BEF    DB '  Before : $'
+AFT    DB '  After  : $'
+CRLF   DB 0DH,0AH,'$'
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+
+    ; ---------- (a) STRLEN ----------
+    PRINT T_LEN
+    PRINT L1
+    LEA SI, STR1             ; SI = string address
+    CALL STRLEN              ; AX = length
+    CALL PRINT_NUM
+    PRINT CRLF
+    PRINT L2
+    LEA SI, STR4
+    CALL STRLEN
+    CALL PRINT_NUM
+    PRINT CRLF
+
+    ; ---------- (b) STRCMP ----------
+    PRINT T_CMP
+    PRINT C1
+    LEA SI, STR1             ; SI = string 1
+    LEA DI, STR2             ; DI = string 2
+    CALL STRCMP              ; AL = 0 / 1 / FFH
+    CALL SHOWCMP
+    PRINT CRLF
+    PRINT C2
+    LEA SI, STR1
+    LEA DI, STR3
+    CALL STRCMP
+    CALL SHOWCMP
+    PRINT CRLF
+    PRINT C3
+    LEA SI, STR3
+    LEA DI, STR1
+    CALL STRCMP
+    CALL SHOWCMP
+    PRINT CRLF
+
+    ; ---------- (c) STRREV ----------
+    PRINT T_REV
+    PRINT BEF
+    LEA SI, STR4
+    CALL PUTS
+    PRINT CRLF
+    LEA SI, STR4
+    CALL STRREV              ; reverse in place
+    PRINT AFT
+    LEA SI, STR4
+    CALL PUTS
+    PRINT CRLF
+
+    MOV AX, 4C00H
+    INT 21H
+MAIN ENDP
+
+; STRLEN: SI = string address (NULL terminated); returns AX = length
+STRLEN PROC
+    PUSH SI
+    XOR AX, AX               ; AX = counter
+SL1:
+    CMP BYTE PTR [SI], 0     ; end of string?
+    JE SL2
+    INC SI
+    INC AX
+    JMP SL1
+SL2:
+    POP SI
+    RET
+STRLEN ENDP
+
+; STRCMP: SI = string 1, DI = string 2
+; returns AL = 0 (equal), 1 (string1 &gt; string2), 0FFH (string1 &lt; string2)
+STRCMP PROC
+    PUSH SI
+    PUSH DI
+    PUSH BX
+SC1:
+    MOV AL, [SI]
+    MOV BL, [DI]
+    CMP AL, BL
+    JNE SC2                  ; first differing character found
+    CMP AL, 0
+    JE SCEQ                  ; both ended together: equal
+    INC SI
+    INC DI
+    JMP SC1
+SC2:
+    JA SCGT                  ; AL above BL: string1 greater
+    MOV AL, 0FFH             ; otherwise string1 is less
+    JMP SCEND
+SCGT:
+    MOV AL, 1
+    JMP SCEND
+SCEQ:
+    MOV AL, 0
+SCEND:
+    POP BX
+    POP DI
+    POP SI
+    RET
+STRCMP ENDP
+
+; STRREV: SI = string address; reverses the string in place (two-pointer swap)
+STRREV PROC
+    PUSH AX
+    PUSH BX
+    PUSH SI
+    PUSH DI
+    CALL STRLEN              ; AX = length
+    CMP AX, 2
+    JB SRDONE                ; nothing to reverse
+    MOV DI, SI
+    ADD DI, AX
+    DEC DI                   ; DI = last character, SI = first character
+SR1:
+    CMP SI, DI
+    JAE SRDONE               ; pointers met or crossed
+    MOV AL, [SI]
+    MOV BL, [DI]
+    MOV [SI], BL             ; swap the two characters
+    MOV [DI], AL
+    INC SI
+    DEC DI
+    JMP SR1
+SRDONE:
+    POP DI
+    POP SI
+    POP BX
+    POP AX
+    RET
+STRREV ENDP
+
+; SHOWCMP: AL = STRCMP result; prints its meaning
+SHOWCMP PROC
+    CMP AL, 0
+    JE SH_EQ
+    CMP AL, 1
+    JE SH_GT
+    PRINT TLT
+    RET
+SH_GT:
+    PRINT TGT
+    RET
+SH_EQ:
+    PRINT TEQ
+    RET
+SHOWCMP ENDP
+
+; PUTS: print NULL terminated string at SI
+PUTS PROC
+    PUSH AX
+    PUSH DX
+    PUSH SI
+PU1:
+    MOV DL, [SI]
+    CMP DL, 0
+    JE PU2
+    MOV AH, 02H
+    INT 21H
+    INC SI
+    JMP PU1
+PU2:
+    POP SI
+    POP DX
+    POP AX
+    RET
+PUTS ENDP
+
+; PRINT_NUM: print unsigned number in AX (all registers preserved)
+PRINT_NUM PROC
+    PUSH AX
+    PUSH BX
+    PUSH CX
+    PUSH DX
+    MOV BX, 10
+    XOR CX, CX
+PN1:
+    XOR DX, DX
+    DIV BX
+    PUSH DX
+    INC CX
+    OR AX, AX
+    JNZ PN1
+PN2:
+    POP DX
+    ADD DL, '0'
+    MOV AH, 02H
+    INT 21H
+    LOOP PN2
+    POP DX
+    POP CX
+    POP BX
+    POP AX
+    RET
+PRINT_NUM ENDP
+
+END MAIN</code></pre>
+  <div class="label">Output</div>
+  <div class="outbox">
+    <div class="bar">DOSBox 0.74 &mdash; C:\LAB&gt;</div>
+<pre>C:\LAB&gt;MASM Q5.ASM;
+C:\LAB&gt;LINK Q5.OBJ;
+C:\LAB&gt;<span class="in">Q5.EXE</span>
+(a) STRLEN
+  Length of "Assembly"           = 8
+  Length of "System Programming" = 18
+(b) STRCMP
+  "Assembly" vs "Assembly" : EQUAL (AL = 00H)
+  "Assembly" vs "Assemble" : STR1 GREATER (AL = 01H)
+  "Assemble" vs "Assembly" : STR1 LESS (AL = FFH)
+(c) STRREV
+  Before : System Programming
+  After  : gnimmargorP metsyS
+
+<span class="dim">; Register trace verified with DEBUG</span>
+after STRLEN(STR1)           : AX=0008
+after STRLEN(STR4)           : AX=0012
+after STRCMP(STR1,STR3)      : AL=01   <span class="dim">('y' = 79H is above 'e' = 65H)</span>
+after STRCMP(STR3,STR1)      : AL=FF
+STR4 in memory after STRREV  : 67 6E 69 6D 6D 61 72 67 6F 72 50 20 6D 65 74 73 79 53 00</pre>
+  </div>
+</div>
+
+<!-- ============================================================
+     PART 2 - ASSIGNMENT 2 (LEVEL 2)
+     Paste this block directly BEFORE the closing </body> tag of Part 1.
+     It reuses the same CSS classes (.qblock, .qhead, .label, .codebox, .outbox).
+     ============================================================ -->
+
+<h2 class="main" style="page-break-before: always;">Assignment 2</h2>
+
+<!-- ===================== QUESTION 1 ===================== -->
+<div class="qblock" id="a2q1">
+  <div class="qhead">
+    <div class="qhead-top">
+      <h3>Question 1</h3>
+      <span class="contributor-badge">Contributor: <strong>Suprit Banerjee</strong> <span class="roll">(002410501052)</span> <a href="#index-page" class="back-top">&uarr; Index</a></span>
+    </div>
+    <p>Boot-level password verification system: Simulate a BIOS-like password verification system, where the steps would be: (a) accepting hidden password input (no echo), (b) comparing with a hardcoded value, (c) allowing up to 3 retries before locking, (d) using BIOS interrupts (<code>INT 16h</code> / <code>INT 10h</code>) for keyboard handling.</p>
+  </div>
+  <div class="label">MASM Source Code</div>
+<pre class="codebox"><code>.MODEL SMALL
+.STACK 100H
+
+.DATA
+PASSWD  DB 'MASM86',0                 ; hardcoded password (NULL terminated)
+BUF     DB 20 DUP(0)                  ; buffer for the typed password
+MAXLEN  EQU 19                        ; maximum characters accepted
+TRIES   DB 3                          ; attempts left before lock
+BANNER  DB '=== SIMPLE BIOS PASSWORD CHECK ===',0DH,0AH,0
+PROMPT  DB 'Enter password: ',0
+WRONG   DB 'Access denied. Attempts left: ',0
+GRANT   DB 'Password accepted. Access granted.',0DH,0AH,0
+LOCKMSG DB 'Too many failed attempts. SYSTEM LOCKED.',0DH,0AH,0
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+    MOV AX, 0003H                     ; INT 10H / AH=00H : set 80x25 text mode (clears screen)
+    INT 10H
+    LEA SI, BANNER
+    CALL PUTS
+ATTEMPT:
+    LEA SI, PROMPT
+    CALL PUTS
+    CALL GETPASS                      ; hidden input -> BUF
+    CALL VERIFY                       ; AL = 1 if BUF equals PASSWD
+    CMP AL, 1
+    JE GRANTED
+    DEC TRIES                         ; one attempt used
+    JZ LOCKED                         ; no attempts left -> lock the system
+    LEA SI, WRONG
+    CALL PUTS
+    MOV AL, TRIES
+    ADD AL, '0'                       ; attempts left as an ASCII digit
+    CALL PUTCH
+    CALL NEWLINE
+    JMP ATTEMPT
+GRANTED:
+    LEA SI, GRANT
+    CALL PUTS
+    MOV AX, 4C00H                     ; exit to DOS, code 0
+    INT 21H
+LOCKED:
+    LEA SI, LOCKMSG
+    CALL PUTS
+    MOV AX, 4C01H                     ; exit to DOS, code 1 (locked)
+    INT 21H
+MAIN ENDP
+
+; PUTCH: print character in AL using BIOS teletype (INT 10H / AH=0EH)
+PUTCH PROC
+    PUSH AX
+    PUSH BX
+    MOV AH, 0EH                       ; teletype output
+    MOV BX, 0007H                     ; BH = page 0, BL = light grey
+    INT 10H
+    POP BX
+    POP AX
+    RET
+PUTCH ENDP
+
+; PUTS: print NULL terminated string at DS:SI through INT 10H
+PUTS PROC
+    PUSH AX
+    PUSH SI
+PS1:
+    MOV AL, [SI]
+    CMP AL, 0
+    JE PS2
+    CALL PUTCH
+    INC SI
+    JMP PS1
+PS2:
+    POP SI
+    POP AX
+    RET
+PUTS ENDP
+
+; NEWLINE: print CR + LF through INT 10H
+NEWLINE PROC
+    PUSH AX
+    MOV AL, 0DH
+    CALL PUTCH
+    MOV AL, 0AH
+    CALL PUTCH
+    POP AX
+    RET
+NEWLINE ENDP
+
+; GETPASS: read keys with INT 16H (AH=00H) WITHOUT echoing; Enter ends the input
+GETPASS PROC
+    PUSH AX
+    PUSH CX
+    PUSH DI
+    LEA DI, BUF                       ; DI = next free byte in BUF
+    XOR CX, CX                        ; CX = characters typed so far
+GP1:
+    MOV AH, 00H                       ; INT 16H / AH=00H : wait for a key, AL = ASCII code
+    INT 16H
+    CMP AL, 0DH                       ; Enter?
+    JE GP4
+    CMP AL, 08H                       ; Backspace?
+    JE GP3
+    CMP AL, 20H
+    JB GP1                            ; ignore control / extended keys
+    CMP CX, MAXLEN
+    JAE GP1                           ; buffer full: ignore key
+    MOV [DI], AL                      ; store key silently (no echo)
+    INC DI
+    INC CX
+    JMP GP1
+GP3:
+    JCXZ GP1                          ; nothing to erase
+    DEC DI
+    DEC CX
+    JMP GP1
+GP4:
+    MOV BYTE PTR [DI], 0              ; terminate the typed string
+    CALL NEWLINE
+    POP DI
+    POP CX
+    POP AX
+    RET
+GETPASS ENDP
+
+; VERIFY: compare BUF with PASSWD; returns AL = 1 (match) or 0 (mismatch)
+VERIFY PROC
+    PUSH SI
+    PUSH DI
+    LEA SI, BUF
+    LEA DI, PASSWD
+V1:
+    MOV AL, [SI]
+    CMP AL, [DI]
+    JNE VBAD                          ; first difference -> wrong password
+    CMP AL, 0
+    JE VOK                            ; both strings ended together -> equal
+    INC SI
+    INC DI
+    JMP V1
+VOK:
+    MOV AL, 1
+    JMP VEND
+VBAD:
+    MOV AL, 0
+VEND:
+    POP DI
+    POP SI
+    RET
+VERIFY ENDP
+
+END MAIN</code></pre>
+  <div class="label">Output</div>
+  <div class="outbox">
+    <div class="bar">DOSBox 0.74 &mdash; C:\LAB&gt;</div>
+<pre>C:\LAB&gt;MASM Q1.ASM;
+C:\LAB&gt;LINK Q1.OBJ;
+
+<span class="dim">; ---- Run 1: two wrong passwords, then the correct one ----</span>
+C:\LAB&gt;<span class="in">Q1.EXE</span>
+=== SIMPLE BIOS PASSWORD CHECK ===
+Enter password:
+Access denied. Attempts left: 2
+Enter password:
+Access denied. Attempts left: 1
+Enter password:
+Password accepted. Access granted.
+<span class="dim">; typed keys (not shown on screen): "hello" Enter, "masm" Enter, "MASM86" Enter</span>
+
+<span class="dim">; ---- Run 2: three wrong passwords ----</span>
+C:\LAB&gt;<span class="in">Q1.EXE</span>
+=== SIMPLE BIOS PASSWORD CHECK ===
+Enter password:
+Access denied. Attempts left: 2
+Enter password:
+Access denied. Attempts left: 1
+Enter password:
+Too many failed attempts. SYSTEM LOCKED.
+
+<span class="dim">; Register / memory state after the 3rd failure (DEBUG)</span>
+TRIES = 00   ZF = 1   <span class="dim">; DEC TRIES gave 0, so JZ LOCKED was taken</span>
+BUF   = 62 61 64 00   <span class="dim">; last attempt "bad" stored without being echoed</span>
+C:\LAB&gt;<span class="in">ECHO %ERRORLEVEL%</span>
+1</pre>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 2 ===================== -->
+<div class="qblock" id="a2q2">
+  <div class="qhead">
+    <div class="qhead-top">
+      <h3>Question 2</h3>
+      <span class="contributor-badge">Contributor: <strong>Romit Datta</strong> <span class="roll">(002410501032)</span> <a href="#index-page" class="back-top">&uarr; Index</a></span>
+    </div>
+    <p>Design and implement a simple command-line shell emulator using MASM (Microsoft Macro Assembler) that accepts user commands from the terminal and performs appropriate actions. The shell must interpret the following commands: (a) <code>DIR</code> &ndash; display a list of mock file names (simulate file listing), (b) <code>TYPE &lt;filename&gt;</code> &ndash; display the contents of the specified file, (c) <code>COPY &lt;source&gt; &lt;destination&gt;</code> &ndash; copy the contents of one file to another, (d) <code>EXIT</code> &ndash; exit the shell interface and terminate the program, (e) the emulator should prompt the user for input, parse the entered command, and invoke the appropriate function to operate. All actions should be implemented using MASM and DOS system interrupts (<code>INT 21h</code>) where applicable.</p>
+  </div>
+  <div class="label">MASM Source Code</div>
+<pre class="codebox"><code>.MODEL SMALL
+.STACK 100H
+
+PRINT MACRO TXT                       ; print a NULL terminated string
+    LEA SI, TXT
+    CALL PUTS
+ENDM
+
+.DATA
+FNAME_SZ EQU 13                       ; bytes per file-name slot (12 chars + 0)
+FDATA_SZ EQU 80                       ; bytes per file-content slot
+NFILES   EQU 5                        ; number of slots in the mock disk
+
+; ---- mock disk kept in RAM: 5 name slots and 5 content slots ----
+NAMES   DB 65 DUP(0)                  ; 5 x 13
+CONTS   DB 400 DUP(0)                 ; 5 x 80
+; ---- initial files (copied into the slots by INITDISK) ----
+IN_N1   DB 'README.TXT',0
+IN_C1   DB 'Welcome to the MASM shell emulator.',0
+IN_N2   DB 'HELLO.ASM',0
+IN_C2   DB 'MOV AH,09H / LEA DX,MSG / INT 21H',0
+IN_N3   DB 'NOTES.DAT',0
+IN_C3   DB 'Lab report due on Friday.',0
+
+INBUF   DB 50,0,50 DUP(0)             ; INT 21H/0AH buffer: max, length, text
+TOKS    DW 3 DUP(0)                   ; pointers to the 3 command tokens
+TOKCNT  DB 0                          ; number of tokens found
+SRCSLOT DB 0
+DSTSLOT DB 0
+NFOUND  DW 0                          ; files counted by DIR
+
+BANNER  DB 'MASM Shell Emulator v1.0  (commands: DIR, TYPE, COPY, EXIT)',0DH,0AH,0
+PROMPT  DB 'MASM-SHELL&gt; ',0
+HDR     DB ' Directory of A:\',0DH,0AH,0
+BYTESM  DB ' bytes',0DH,0AH,0
+FILESM  DB ' file(s)',0DH,0AH,0
+BADCMD  DB 'Bad command or file name',0DH,0AH,0
+NOFILE  DB 'File not found',0DH,0AH,0
+USE_T   DB 'Usage: TYPE &lt;filename&gt;',0DH,0AH,0
+USE_C   DB 'Usage: COPY &lt;source&gt; &lt;destination&gt;',0DH,0AH,0
+FULLM   DB 'Disk full - no free directory entry',0DH,0AH,0
+COPIED  DB '        1 file(s) copied',0DH,0AH,0
+BYEM    DB 'Shell terminated. Goodbye!',0DH,0AH,0
+CRLF    DB 0DH,0AH,0
+C_DIR   DB 'DIR',0
+C_TYPE  DB 'TYPE',0
+C_COPY  DB 'COPY',0
+C_EXIT  DB 'EXIT',0
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+    CALL INITDISK                     ; build the mock files
+    PRINT BANNER
+SHELL:
+    PRINT PROMPT
+    LEA DX, INBUF
+    MOV AH, 0AH                       ; INT 21H/0AH : buffered keyboard input
+    INT 21H
+    PRINT CRLF
+    CALL PARSE                        ; upper-case the line and split it into tokens
+    CMP TOKCNT, 0
+    JE SHELL                          ; empty line -> prompt again
+
+    MOV SI, TOKS                      ; SI = first token (the command word)
+    LEA DI, C_DIR
+    CALL STREQ
+    CMP AL, 1
+    JNE NOTDIR
+    CALL CMD_DIR
+    JMP SHELL
+NOTDIR:
+    MOV SI, TOKS
+    LEA DI, C_TYPE
+    CALL STREQ
+    CMP AL, 1
+    JNE NOTTYPE
+    CALL CMD_TYPE
+    JMP SHELL
+NOTTYPE:
+    MOV SI, TOKS
+    LEA DI, C_COPY
+    CALL STREQ
+    CMP AL, 1
+    JNE NOTCOPY
+    CALL CMD_COPY
+    JMP SHELL
+NOTCOPY:
+    MOV SI, TOKS
+    LEA DI, C_EXIT
+    CALL STREQ
+    CMP AL, 1
+    JE QUIT
+    PRINT BADCMD                      ; unknown command
+    JMP SHELL
+QUIT:
+    PRINT BYEM
+    MOV AX, 4C00H                     ; INT 21H/4CH : terminate program
+    INT 21H
+MAIN ENDP
+
+; INITDISK: copy the initial names/contents into slots 0, 1 and 2
+INITDISK PROC
+    LEA SI, IN_N1
+    LEA DI, NAMES
+    CALL STRCPY
+    LEA SI, IN_C1
+    LEA DI, CONTS
+    CALL STRCPY
+    LEA SI, IN_N2
+    LEA DI, NAMES+FNAME_SZ
+    CALL STRCPY
+    LEA SI, IN_C2
+    LEA DI, CONTS+FDATA_SZ
+    CALL STRCPY
+    LEA SI, IN_N3
+    LEA DI, NAMES+2*FNAME_SZ
+    CALL STRCPY
+    LEA SI, IN_C3
+    LEA DI, CONTS+2*FDATA_SZ
+    CALL STRCPY
+    RET
+INITDISK ENDP
+
+; PARSE: upper-case INBUF text and split it at spaces into TOKS[0..2]
+PARSE PROC
+    PUSH AX
+    PUSH BX
+    PUSH SI
+    MOV BL, INBUF+1                   ; BL = number of characters typed
+    XOR BH, BH
+    MOV BYTE PTR INBUF[BX+2], 0       ; replace the CR by a 0 terminator
+    MOV WORD PTR TOKS, 0              ; clear token table
+    MOV WORD PTR TOKS+2, 0
+    MOV WORD PTR TOKS+4, 0
+    LEA SI, INBUF+2                   ; SI = first typed character
+UP1:
+    MOV AL, [SI]
+    CMP AL, 0
+    JE UP3
+    CMP AL, 'a'
+    JB UP2
+    CMP AL, 'z'
+    JA UP2
+    SUB AL, 20H                       ; lower case -&gt; upper case
+    MOV [SI], AL
+UP2:
+    INC SI
+    JMP UP1
+UP3:
+    LEA SI, INBUF+2
+    XOR BX, BX                        ; BX = token index x 2
+NEXTTOK:
+SK:
+    MOV AL, [SI]                      ; skip leading spaces
+    CMP AL, ' '
+    JNE SK2
+    INC SI
+    JMP SK
+SK2:
+    CMP AL, 0
+    JE PDONE                          ; end of line
+    CMP BX, 6
+    JAE PDONE                         ; only 3 tokens are kept
+    MOV TOKS[BX], SI                  ; remember where this token starts
+    ADD BX, 2
+SC:
+    MOV AL, [SI]                      ; scan to the end of the token
+    CMP AL, 0
+    JE PDONE
+    CMP AL, ' '
+    JE SC2
+    INC SI
+    JMP SC
+SC2:
+    MOV BYTE PTR [SI], 0              ; end the token with 0
+    INC SI
+    JMP NEXTTOK
+PDONE:
+    SHR BX, 1                         ; BX = number of tokens
+    MOV TOKCNT, BL
+    POP SI
+    POP BX
+    POP AX
+    RET
+PARSE ENDP
+
+; ---------- DIR : list every used slot with its size ----------
+CMD_DIR PROC
+    PUSH AX
+    PUSH BX
+    PRINT HDR
+    MOV NFOUND, 0
+    XOR BX, BX                        ; BX = slot number
+DL1:
+    CALL SHOWENTRY
+    INC BX
+    CMP BX, NFILES
+    JB DL1
+    MOV AX, NFOUND
+    CALL PRINT_NUM
+    PRINT FILESM
+    POP BX
+    POP AX
+    RET
+CMD_DIR ENDP
+
+; SHOWENTRY: BX = slot; prints "NAME   size bytes" if the slot is used
+SHOWENTRY PROC
+    PUSH AX
+    PUSH CX
+    PUSH DX
+    PUSH SI
+    PUSH DI
+    MOV AX, BX
+    CALL NAMEADDR                     ; DI = address of the name
+    CMP BYTE PTR [DI], 0
+    JE SEDONE                         ; free slot
+    MOV SI, DI
+    CALL PUTS                         ; print the file name
+    CALL STRLEN                       ; AX = name length
+    MOV CX, 14
+    SUB CX, AX                        ; CX = padding spaces
+SEPAD:
+    MOV DL, ' '
+    MOV AH, 02H
+    INT 21H
+    LOOP SEPAD
+    MOV AX, BX
+    CALL CONTADDR                     ; DI = address of the content
+    MOV SI, DI
+    CALL STRLEN                       ; AX = file size in bytes
+    CALL PRINT_NUM
+    PRINT BYTESM
+    INC NFOUND
+SEDONE:
+    POP DI
+    POP SI
+    POP DX
+    POP CX
+    POP AX
+    RET
+SHOWENTRY ENDP
+
+; ---------- TYPE &lt;filename&gt; ----------
+CMD_TYPE PROC
+    CMP TOKCNT, 2
+    JAE TY1
+    PRINT USE_T
+    RET
+TY1:
+    MOV SI, TOKS+2                    ; SI = second token (file name)
+    CALL FINDFILE                     ; AL = slot or 0FFH
+    CMP AL, 0FFH
+    JNE TY2
+    PRINT NOFILE
+    RET
+TY2:
+    CALL CONTADDR                     ; DI = file content
+    MOV SI, DI
+    CALL PUTS
+    PRINT CRLF
+    RET
+CMD_TYPE ENDP
+
+; ---------- COPY &lt;source&gt; &lt;destination&gt; ----------
+CMD_COPY PROC
+    CMP TOKCNT, 3
+    JAE CP_OK
+    PRINT USE_C
+    RET
+CP_OK:
+    MOV SI, TOKS+2                    ; source name
+    CALL FINDFILE
+    CMP AL, 0FFH
+    JNE CP1
+    PRINT NOFILE
+    RET
+CP1:
+    MOV SRCSLOT, AL
+    MOV SI, TOKS+4                    ; destination name
+    CALL FINDFILE
+    CMP AL, 0FFH
+    JE CP2                            ; destination does not exist -&gt; create it
+    MOV DSTSLOT, AL                   ; destination exists -&gt; overwrite its content
+    JMP CP5
+CP2:
+    XOR BX, BX                        ; search for a free slot
+CP2L:
+    MOV AX, BX
+    CALL NAMEADDR                     ; DI = name field of slot BX
+    CMP BYTE PTR [DI], 0
+    JE CP3
+    INC BX
+    CMP BX, NFILES
+    JB CP2L
+    PRINT FULLM                       ; no free slot
+    RET
+CP3:
+    MOV DSTSLOT, BL
+    MOV SI, TOKS+4
+    MOV CX, 12                        ; keep at most 12 characters of the name
+CP3L:
+    MOV AL, [SI]
+    MOV [DI], AL
+    CMP AL, 0
+    JE CP5                            ; whole name copied (0 included)
+    INC SI
+    INC DI
+    LOOP CP3L
+    MOV BYTE PTR [DI], 0              ; name was longer than 12: cut it
+CP5:
+    MOV AL, SRCSLOT
+    CALL CONTADDR                     ; DI = source content
+    MOV SI, DI
+    MOV AL, DSTSLOT
+    CALL CONTADDR                     ; DI = destination content
+CP6:
+    MOV AL, [SI]                      ; copy content including the 0
+    MOV [DI], AL
+    INC SI
+    INC DI
+    CMP AL, 0
+    JNE CP6
+    PRINT COPIED
+    RET
+CMD_COPY ENDP
+
+; FINDFILE: SI = file name; returns AL = slot number or 0FFH if not found
+FINDFILE PROC
+    PUSH BX
+    PUSH DI
+    XOR BX, BX
+FF1:
+    MOV AX, BX
+    CALL NAMEADDR                     ; DI = name of slot BX
+    CMP BYTE PTR [DI], 0
+    JE FF2                            ; free slot: skip
+    CALL STREQ                        ; compare SI with DI
+    CMP AL, 1
+    JE FFOK
+FF2:
+    INC BX
+    CMP BX, NFILES
+    JB FF1
+    MOV AL, 0FFH                      ; not found
+    JMP FFEND
+FFOK:
+    MOV AX, BX                        ; AL = slot number
+FFEND:
+    POP DI
+    POP BX
+    RET
+FINDFILE ENDP
+
+; NAMEADDR: AL = slot -&gt; DI = NAMES + slot*13
+NAMEADDR PROC
+    PUSH AX
+    PUSH BX
+    MOV BL, FNAME_SZ
+    MUL BL                            ; AX = AL * 13
+    LEA DI, NAMES
+    ADD DI, AX
+    POP BX
+    POP AX
+    RET
+NAMEADDR ENDP
+
+; CONTADDR: AL = slot -&gt; DI = CONTS + slot*80
+CONTADDR PROC
+    PUSH AX
+    PUSH BX
+    MOV BL, FDATA_SZ
+    MUL BL                            ; AX = AL * 80
+    LEA DI, CONTS
+    ADD DI, AX
+    POP BX
+    POP AX
+    RET
+CONTADDR ENDP
+
+; STREQ: compare strings at SI and DI; AL = 1 if equal, 0 otherwise
+STREQ PROC
+    PUSH SI
+    PUSH DI
+EQ1:
+    MOV AL, [SI]
+    CMP AL, [DI]
+    JNE EQ_NO
+    OR AL, AL
+    JZ EQ_YES                         ; both ended -&gt; equal
+    INC SI
+    INC DI
+    JMP EQ1
+EQ_YES:
+    MOV AL, 1
+    JMP EQ_END
+EQ_NO:
+    XOR AL, AL
+EQ_END:
+    POP DI
+    POP SI
+    RET
+STREQ ENDP
+
+; STRLEN: SI = string; returns AX = length (SI preserved)
+STRLEN PROC
+    PUSH SI
+    XOR AX, AX
+SL1:
+    CMP BYTE PTR [SI], 0
+    JE SL2
+    INC SI
+    INC AX
+    JMP SL1
+SL2:
+    POP SI
+    RET
+STRLEN ENDP
+
+; STRCPY: copy NULL terminated string from SI to DI
+STRCPY PROC
+    PUSH AX
+    PUSH SI
+    PUSH DI
+SCP1:
+    MOV AL, [SI]
+    MOV [DI], AL
+    INC SI
+    INC DI
+    CMP AL, 0
+    JNE SCP1
+    POP DI
+    POP SI
+    POP AX
+    RET
+STRCPY ENDP
+
+; PUTS: print NULL terminated string at SI using INT 21H/02H
+PUTS PROC
+    PUSH AX
+    PUSH DX
+    PUSH SI
+PU1:
+    MOV DL, [SI]
+    CMP DL, 0
+    JE PU2
+    MOV AH, 02H
+    INT 21H
+    INC SI
+    JMP PU1
+PU2:
+    POP SI
+    POP DX
+    POP AX
+    RET
+PUTS ENDP
+
+; PRINT_NUM: print unsigned number in AX (all registers preserved)
+PRINT_NUM PROC
+    PUSH AX
+    PUSH BX
+    PUSH CX
+    PUSH DX
+    MOV BX, 10
+    XOR CX, CX
+PN1:
+    XOR DX, DX
+    DIV BX
+    PUSH DX
+    INC CX
+    OR AX, AX
+    JNZ PN1
+PN2:
+    POP DX
+    ADD DL, '0'
+    MOV AH, 02H
+    INT 21H
+    LOOP PN2
+    POP DX
+    POP CX
+    POP BX
+    POP AX
+    RET
+PRINT_NUM ENDP
+
+END MAIN</code></pre>
+  <div class="label">Output</div>
+  <div class="outbox">
+    <div class="bar">DOSBox 0.74 &mdash; C:\LAB&gt;</div>
+<pre>C:\LAB&gt;MASM Q2.ASM;
+C:\LAB&gt;LINK Q2.OBJ;
+C:\LAB&gt;<span class="in">Q2.EXE</span>
+MASM Shell Emulator v1.0  (commands: DIR, TYPE, COPY, EXIT)
+MASM-SHELL&gt; <span class="in">dir</span>
+ Directory of A:\
+README.TXT    35 bytes
+HELLO.ASM     33 bytes
+NOTES.DAT     25 bytes
+3 file(s)
+MASM-SHELL&gt; <span class="in">TYPE README.TXT</span>
+Welcome to the MASM shell emulator.
+MASM-SHELL&gt; <span class="in">copy readme.txt backup.txt</span>
+        1 file(s) copied
+MASM-SHELL&gt; <span class="in">DIR</span>
+ Directory of A:\
+README.TXT    35 bytes
+HELLO.ASM     33 bytes
+NOTES.DAT     25 bytes
+BACKUP.TXT    35 bytes
+4 file(s)
+MASM-SHELL&gt; <span class="in">TYPE BACKUP.TXT</span>
+Welcome to the MASM shell emulator.
+MASM-SHELL&gt; <span class="in">TYPE MISSING.TXT</span>
+File not found
+MASM-SHELL&gt; <span class="in">COPY NOTES.DAT</span>
+Usage: COPY &lt;source&gt; &lt;destination&gt;
+MASM-SHELL&gt; <span class="in">FORMAT C:</span>
+Bad command or file name
+MASM-SHELL&gt; <span class="in">EXIT</span>
+Shell terminated. Goodbye!
+
+<span class="dim">; Parser state while handling "copy readme.txt backup.txt" (DEBUG)</span>
+INBUF+1 = 1AH (26 characters typed)
+INBUF+2 = 43 4F 50 59 00 52 45 41 44 4D 45 2E 54 58 54 00 ...  <span class="dim">; "COPY",0,"README.TXT",0 ...</span>
+TOKCNT  = 03
+TOKS    = INBUF+2, INBUF+7, INBUF+18   <span class="dim">; start of COPY, README.TXT, BACKUP.TXT</span></pre>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 3 ===================== -->
+<div class="qblock" id="a2q3">
+  <div class="qhead">
+    <div class="qhead-top">
+      <h3>Question 3</h3>
+      <span class="contributor-badge">Contributor: <strong>Golam Masum Basar</strong> <span class="roll">(00241505057)</span> <a href="#index-page" class="back-top">&uarr; Index</a></span>
+    </div>
+    <p>Implement FCFS (First-Come-First-Served) disk scheduling algorithm using MASM (calculate and display total head movement for a sample track request queue).</p>
+  </div>
+  <div class="label">MASM Source Code</div>
+<pre class="codebox"><code>.MODEL SMALL
+.STACK 100H
+
+PRINT MACRO TXT                       ; print a '$' string (AX and DX preserved)
+    PUSH AX
+    PUSH DX
+    LEA DX, TXT
+    MOV AH, 09H
+    INT 21H
+    POP DX
+    POP AX
+ENDM
+
+PUTC MACRO CHR                        ; print one character
+    MOV DL, CHR
+    MOV AH, 02H
+    INT 21H
+ENDM
+
+.DATA
+REQ    DW 98,183,37,122,14,124,65,67  ; track request queue (served in this order)
+NREQ   EQU ($-REQ)/2                  ; number of requests = 8
+HEAD   DW 53                          ; initial head position
+T1     DB 'FCFS Disk Scheduling',0DH,0AH,'$'
+T2     DB 'Request queue : $'
+T3     DB 0DH,0AH,'Initial head  : $'
+T4     DB 0DH,0AH,0DH,0AH,'Seek sequence:',0DH,0AH,'$'
+P_SEEK DB 'Seek $'
+ARROW  DB ' -&gt; $'
+P_MOVE DB ' : $'
+P_TOT  DB 0DH,0AH,'Total head movement = $'
+P_AVG  DB 0DH,0AH,'Average seek length = $'
+P_TRK  DB ' tracks$'
+CRLF   DB 0DH,0AH,'$'
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+
+    PRINT T1
+    PRINT T2
+    LEA SI, REQ                       ; show the request queue
+    MOV CX, NREQ
+PQ:
+    MOV AX, [SI]
+    CALL PRINT_NUM
+    PUTC ' '
+    ADD SI, 2
+    LOOP PQ
+    PRINT T3
+    MOV AX, HEAD
+    CALL PRINT_NUM
+    PRINT T4
+
+    LEA SI, REQ                       ; SI = pointer to next request
+    MOV CX, NREQ                      ; CX = requests left
+    MOV BX, HEAD                      ; BX = current head position
+    XOR DI, DI                        ; DI = total head movement
+FC1:
+    MOV AX, [SI]                      ; AX = next track to serve
+    MOV DX, AX
+    SUB DX, BX                        ; DX = target - head
+    JAE FC2                           ; no borrow: already positive
+    NEG DX                            ; DX = |target - head|
+FC2:
+    ADD DI, DX                        ; accumulate total movement
+    PRINT P_SEEK
+    PUSH AX                           ; save target track
+    MOV AX, BX
+    CALL PRINT_NUM                    ; print old head position
+    PRINT ARROW
+    POP AX
+    PUSH AX
+    CALL PRINT_NUM                    ; print new head position
+    PRINT P_MOVE
+    MOV AX, DX
+    CALL PRINT_NUM                    ; print this seek distance
+    PRINT CRLF
+    POP BX                            ; head is now at the target track
+    ADD SI, 2
+    LOOP FC1
+
+    PRINT P_TOT
+    MOV AX, DI
+    CALL PRINT_NUM                    ; total head movement
+    PRINT P_TRK
+
+    PRINT P_AVG
+    MOV AX, DI
+    XOR DX, DX
+    MOV BX, NREQ
+    DIV BX                            ; AX = total / number of requests
+    CALL PRINT_NUM
+    PRINT P_TRK
+    PRINT CRLF
+
+    MOV AX, 4C00H
+    INT 21H
+MAIN ENDP
+
+; PRINT_NUM: print unsigned number in AX (all registers preserved)
+PRINT_NUM PROC
+    PUSH AX
+    PUSH BX
+    PUSH CX
+    PUSH DX
+    MOV BX, 10
+    XOR CX, CX
+PN1:
+    XOR DX, DX
+    DIV BX
+    PUSH DX
+    INC CX
+    OR AX, AX
+    JNZ PN1
+PN2:
+    POP DX
+    ADD DL, '0'
+    MOV AH, 02H
+    INT 21H
+    LOOP PN2
+    POP DX
+    POP CX
+    POP BX
+    POP AX
+    RET
+PRINT_NUM ENDP
+
+END MAIN</code></pre>
+  <div class="label">Output</div>
+  <div class="outbox">
+    <div class="bar">DOSBox 0.74 &mdash; C:\LAB&gt;</div>
+<pre>C:\LAB&gt;MASM Q3.ASM;
+C:\LAB&gt;LINK Q3.OBJ;
+C:\LAB&gt;<span class="in">Q3.EXE</span>
+FCFS Disk Scheduling
+Request queue : 98 183 37 122 14 124 65 67
+Initial head  : 53
+
+Seek sequence:
+Seek 53 -&gt; 98 : 45
+Seek 98 -&gt; 183 : 85
+Seek 183 -&gt; 37 : 146
+Seek 37 -&gt; 122 : 85
+Seek 122 -&gt; 14 : 108
+Seek 14 -&gt; 124 : 110
+Seek 124 -&gt; 65 : 59
+Seek 65 -&gt; 67 : 2
+
+Total head movement = 640 tracks
+Average seek length = 80 tracks
+
+<span class="dim">; Register state at the end of the FC1 loop (DEBUG)</span>
+AX=0050  BX=0043  CX=0000  DI=0280  <span class="dim">; DI = 640 (total), BX = 67 (final head), AX = 80 (average)</span>
+<span class="dim">; check: 45 + 85 + 146 + 85 + 108 + 110 + 59 + 2 = 640</span></pre>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 4 ===================== -->
+<div class="qblock" id="a2q4">
+  <div class="qhead">
+    <div class="qhead-top">
+      <h3>Question 4</h3>
+      <span class="contributor-badge">Contributor: <strong>Somdev Ganguli</strong> <span class="roll">(002410501033)</span> <a href="#index-page" class="back-top">&uarr; Index</a></span>
+    </div>
+    <p>Implement a MASM program to sort an array of n elements (n should be taken as user input).</p>
+  </div>
+  <div class="label">MASM Source Code</div>
+<pre class="codebox"><code>.MODEL SMALL
+.STACK 100H
+
+PRINT MACRO TXT                       ; print a '$' string (AX and DX preserved)
+    PUSH AX
+    PUSH DX
+    LEA DX, TXT
+    MOV AH, 09H
+    INT 21H
+    POP DX
+    POP AX
+ENDM
+
+.DATA
+MAXN   EQU 50                         ; maximum number of elements
+ARR    DW 50 DUP(0)                   ; array of 16-bit unsigned numbers
+NELEM  DW 0                           ; n (entered by the user)
+PASSNO DW 0                           ; pass counter used for the trace
+P_N    DB 'Enter number of elements (1-50) : $'
+P_EL   DB 'Enter element $'
+P_COL  DB ' : $'
+ERRN   DB 'Invalid size! Please enter a value between 1 and 50.',0DH,0AH,'$'
+M_BEF  DB 0DH,0AH,'Array before sorting : $'
+M_PASS DB 'Pass $'
+M_AFT  DB 0DH,'Array after sorting  : $'
+CRLF   DB 0DH,0AH,'$'
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+
+ASKN:
+    PRINT P_N
+    CALL READ_NUM                     ; AX = n
+    PRINT CRLF
+    CMP AX, 1
+    JB BADN                           ; n &lt; 1
+    CMP AX, MAXN
+    JA BADN                           ; n &gt; 50
+    MOV NELEM, AX
+    JMP READEL
+BADN:
+    PRINT ERRN
+    JMP ASKN
+
+READEL:
+    LEA SI, ARR                       ; SI = pointer into the array
+    MOV CX, NELEM                     ; CX = elements to read
+    MOV BX, 1                         ; BX = element number shown to the user
+RD1:
+    PRINT P_EL
+    MOV AX, BX
+    CALL PRINT_NUM
+    PRINT P_COL
+    CALL READ_NUM                     ; AX = value typed
+    MOV [SI], AX
+    PRINT CRLF
+    ADD SI, 2
+    INC BX
+    LOOP RD1
+
+    PRINT M_BEF
+    CALL SHOWARR
+    PRINT CRLF
+    PRINT CRLF
+
+    ; ---- bubble sort (ascending) ----
+    MOV CX, NELEM
+    DEC CX                            ; CX = n-1 passes
+    JZ SORTDONE                       ; a single element is already sorted
+    MOV PASSNO, 0
+OUTER:
+    PUSH CX                           ; keep the pass counter
+    LEA SI, ARR
+INNER:
+    MOV AX, [SI]                      ; AX = a[i]
+    CMP AX, [SI+2]                    ; compare with a[i+1]
+    JBE NOSWAP
+    XCHG AX, [SI+2]                   ; a[i+1] = old a[i], AX = old a[i+1]
+    MOV [SI], AX                      ; a[i] = old a[i+1]
+NOSWAP:
+    ADD SI, 2
+    LOOP INNER                        ; CX comparisons in this pass
+    INC PASSNO
+    PRINT M_PASS
+    MOV AX, PASSNO
+    CALL PRINT_NUM
+    PRINT P_COL
+    CALL SHOWARR                      ; show the array after this pass
+    PRINT CRLF
+    POP CX
+    LOOP OUTER
+SORTDONE:
+    PRINT M_AFT
+    CALL SHOWARR
+    PRINT CRLF
+
+    MOV AX, 4C00H
+    INT 21H
+MAIN ENDP
+
+; SHOWARR: print the NELEM numbers of ARR separated by spaces
+SHOWARR PROC
+    PUSH AX
+    PUSH CX
+    PUSH DX
+    PUSH SI
+    LEA SI, ARR
+    MOV CX, NELEM
+SA1:
+    MOV AX, [SI]
+    CALL PRINT_NUM
+    MOV DL, ' '
+    MOV AH, 02H
+    INT 21H
+    ADD SI, 2
+    LOOP SA1
+    POP SI
+    POP DX
+    POP CX
+    POP AX
+    RET
+SHOWARR ENDP
+
+; READ_NUM: read an unsigned decimal number (ends with Enter); returns AX
+READ_NUM PROC
+    PUSH BX
+    PUSH CX
+    PUSH DX
+    XOR BX, BX                        ; BX = running value
+RN1:
+    MOV AH, 01H                       ; read one character with echo
+    INT 21H
+    CMP AL, 0DH                       ; Enter ends the number
+    JE RN2
+    CMP AL, '0'
+    JB RN1                            ; ignore non-digits
+    CMP AL, '9'
+    JA RN1
+    SUB AL, '0'
+    XOR AH, AH
+    MOV CX, AX                        ; CX = new digit
+    MOV AX, BX
+    MOV DX, 10
+    MUL DX                            ; AX = value * 10
+    ADD AX, CX                        ; add the new digit
+    MOV BX, AX
+    JMP RN1
+RN2:
+    MOV AX, BX
+    POP DX
+    POP CX
+    POP BX
+    RET
+READ_NUM ENDP
+
+; PRINT_NUM: print unsigned number in AX (all registers preserved)
+PRINT_NUM PROC
+    PUSH AX
+    PUSH BX
+    PUSH CX
+    PUSH DX
+    MOV BX, 10
+    XOR CX, CX
+PN1:
+    XOR DX, DX
+    DIV BX
+    PUSH DX
+    INC CX
+    OR AX, AX
+    JNZ PN1
+PN2:
+    POP DX
+    ADD DL, '0'
+    MOV AH, 02H
+    INT 21H
+    LOOP PN2
+    POP DX
+    POP CX
+    POP BX
+    POP AX
+    RET
+PRINT_NUM ENDP
+
+END MAIN</code></pre>
+  <div class="label">Output</div>
+  <div class="outbox">
+    <div class="bar">DOSBox 0.74 &mdash; C:\LAB&gt;</div>
+<pre>C:\LAB&gt;MASM Q4.ASM;
+C:\LAB&gt;LINK Q4.OBJ;
+C:\LAB&gt;<span class="in">Q4.EXE</span>
+Enter number of elements (1-50) : <span class="in">0</span>
+Invalid size! Please enter a value between 1 and 50.
+Enter number of elements (1-50) : <span class="in">8</span>
+Enter element 1 : <span class="in">64</span>
+Enter element 2 : <span class="in">25</span>
+Enter element 3 : <span class="in">12</span>
+Enter element 4 : <span class="in">22</span>
+Enter element 5 : <span class="in">11</span>
+Enter element 6 : <span class="in">90</span>
+Enter element 7 : <span class="in">5</span>
+Enter element 8 : <span class="in">37</span>
+
+Array before sorting : 64 25 12 22 11 90 5 37
+
+Pass 1 : 25 12 22 11 64 5 37 90
+Pass 2 : 12 22 11 25 5 37 64 90
+Pass 3 : 12 11 22 5 25 37 64 90
+Pass 4 : 11 12 5 22 25 37 64 90
+Pass 5 : 11 5 12 22 25 37 64 90
+Pass 6 : 5 11 12 22 25 37 64 90
+Pass 7 : 5 11 12 22 25 37 64 90
+
+Array after sorting  : 5 11 12 22 25 37 64 90
+
+<span class="dim">; Memory state of ARR after the program (DEBUG, 16-bit words, little-endian)</span>
+-<span class="in">D DS:0000 000F</span>
+05 00 0B 00 0C 00 16 00 19 00 25 00 40 00 5A 00
+<span class="dim">; = 5, 11, 12, 22, 25, 37, 64, 90 (decimal)</span></pre>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 5 ===================== -->
+<div class="qblock" id="a2q5">
+  <div class="qhead">
+    <div class="qhead-top">
+      <h3>Question 5</h3>
+      <span class="contributor-badge">Contributor: <strong>Vibhan Dutta</strong> <span class="roll">(002410501041)</span> <a href="#index-page" class="back-top">&uarr; Index</a></span>
+    </div>
+    <p>Develop a MASM program that accepts a string consisting of multiple types of brackets (i.e., <code>()</code>, <code>{}</code>, <code>[]</code>) and verifies whether they are balanced and properly nested. The program should simulate a stack-based approach to evaluate the expression, pushing opening brackets and popping when a matching closing bracket is found. The program should output either: (a) <code>Balanced</code> &ndash; if all opening and closing brackets are matched correctly, or (b) <code>Non-Balanced</code>.</p>
+  </div>
+  <div class="label">MASM Source Code</div>
+<pre class="codebox"><code>.MODEL SMALL
+.STACK 100H
+
+PRINT MACRO TXT                       ; print a '$' string (AX and DX preserved)
+    PUSH AX
+    PUSH DX
+    LEA DX, TXT
+    MOV AH, 09H
+    INT 21H
+    POP DX
+    POP AX
+ENDM
+
+.DATA
+BUF    DB 80,0,80 DUP(0)              ; INT 21H/0AH buffer: max, length, text
+STK    DB 80 DUP(0)                   ; software stack that holds opening brackets
+P_IN   DB 'Enter expression : $'
+T_PUSH DB '  PUSH  $'
+T_POP  DB '  POP   $'
+R_BAL  DB 'Result : Balanced$'
+R_NB   DB 'Result : Non-Balanced$'
+W1     DB ' (closing bracket with no opening bracket)$'
+W2     DB ' (closing bracket does not match the top of the stack)$'
+W3     DB ' (opening bracket(s) never closed)$'
+AGAIN  DB 'Check another expression (Y/N)? $'
+CRLF   DB 0DH,0AH,'$'
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+START:
+    PRINT P_IN
+    LEA DX, BUF
+    MOV AH, 0AH                       ; INT 21H/0AH : buffered input
+    INT 21H
+    PRINT CRLF
+    LEA SI, BUF+2                     ; SI = first typed character
+    LEA BX, STK                       ; BX = stack pointer (empty when BX = STK)
+NXT:
+    MOV AL, [SI]
+    CMP AL, 0DH                       ; CR marks the end of the typed text
+    JE ENDSCAN
+    CMP AL, '('
+    JE PSH
+    CMP AL, '{'
+    JE PSH
+    CMP AL, '['
+    JE PSH
+    MOV AH, '('                       ; AH = opening bracket that must be on top
+    CMP AL, ')'
+    JE CLS
+    MOV AH, '{'
+    CMP AL, '}'
+    JE CLS
+    MOV AH, '['
+    CMP AL, ']'
+    JE CLS
+    JMP ADV                           ; any other character is ignored
+PSH:
+    MOV [BX], AL                      ; PUSH the opening bracket
+    INC BX
+    CALL TR_PUSH
+    JMP ADV
+CLS:
+    CMP BX, OFFSET STK                ; stack empty?
+    JE E_EMPTY                        ; closing bracket without an opener
+    DEC BX                            ; POP the top of the stack
+    CMP [BX], AH                      ; does it match this closing bracket?
+    JNE E_MIS
+    CALL TR_POP
+ADV:
+    INC SI
+    JMP NXT
+
+ENDSCAN:
+    CMP BX, OFFSET STK                ; stack must be empty at the end
+    JNE E_LEFT
+    PRINT R_BAL
+    JMP ASKAG
+E_EMPTY:
+    PRINT R_NB
+    PRINT W1
+    JMP ASKAG
+E_MIS:
+    PRINT R_NB
+    PRINT W2
+    JMP ASKAG
+E_LEFT:
+    PRINT R_NB
+    PRINT W3
+
+ASKAG:
+    PRINT CRLF
+    PRINT AGAIN
+    MOV AH, 01H                       ; read Y/N with echo
+    INT 21H
+    MOV DH, AL
+    PRINT CRLF
+    PRINT CRLF
+    CMP DH, 'Y'
+    JE AGAINL
+    CMP DH, 'y'
+    JE AGAINL
+    MOV AX, 4C00H
+    INT 21H
+AGAINL:
+    JMP START
+MAIN ENDP
+
+; TR_PUSH: print "  PUSH  x" for the bracket in AL
+TR_PUSH PROC
+    PUSH AX
+    PUSH DX
+    PRINT T_PUSH
+    MOV DL, AL
+    MOV AH, 02H
+    INT 21H
+    PRINT CRLF
+    POP DX
+    POP AX
+    RET
+TR_PUSH ENDP
+
+; TR_POP: print "  POP   x" for the opening bracket in AH
+TR_POP PROC
+    PUSH AX
+    PUSH DX
+    PRINT T_POP
+    MOV DL, AH
+    MOV AH, 02H
+    INT 21H
+    PRINT CRLF
+    POP DX
+    POP AX
+    RET
+TR_POP ENDP
+
+END MAIN</code></pre>
+  <div class="label">Output</div>
+  <div class="outbox">
+    <div class="bar">DOSBox 0.74 &mdash; C:\LAB&gt;</div>
+<pre>C:\LAB&gt;MASM Q5.ASM;
+C:\LAB&gt;LINK Q5.OBJ;
+C:\LAB&gt;<span class="in">Q5.EXE</span>
+Enter expression : <span class="in">{[()]}</span>
+  PUSH  {
+  PUSH  [
+  PUSH  (
+  POP   (
+  POP   [
+  POP   {
+Result : Balanced
+Check another expression (Y/N)? <span class="in">Y</span>
+
+Enter expression : <span class="in">{[(])}</span>
+  PUSH  {
+  PUSH  [
+  PUSH  (
+Result : Non-Balanced (closing bracket does not match the top of the stack)
+Check another expression (Y/N)? <span class="in">Y</span>
+
+Enter expression : <span class="in">((a+b)</span>
+  PUSH  (
+  PUSH  (
+  POP   (
+Result : Non-Balanced (opening bracket(s) never closed)
+Check another expression (Y/N)? <span class="in">N</span>
+
+<span class="dim">; Stack pointer BX at the decision point (DEBUG)</span>
+{[()]}   : BX = STK+0   <span class="dim">; stack empty -&gt; Balanced</span>
+{[(])}   : BX = STK+2   <span class="dim">; ']' met '(' on top -&gt; mismatch</span>
+((a+b)   : BX = STK+1   <span class="dim">; one '(' left on the stack -&gt; Non-Balanced</span></pre>
+  </div>
+</div>
+
+</body>
+</html>
